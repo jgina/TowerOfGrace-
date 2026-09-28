@@ -5,6 +5,11 @@ const data = (r) => r.data;
 export const adminService = {
   dashboard: () => api.get('/admin/dashboard').then(data),
 
+  // Notifications
+  notifications: (params) => api.get('/admin/notifications', { params }).then(data),
+  markNotificationRead: (id) => api.patch(`/admin/notifications/${id}/read`).then(data),
+  markAllNotificationsRead: () => api.post('/admin/notifications/read-all').then(data),
+
   // Uploads
   uploadStatus: () => api.get('/admin/uploads/status').then((r) => r.data.configured),
   uploadImages: (files, folder, onProgress) => {

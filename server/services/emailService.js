@@ -98,24 +98,28 @@ const button = (href, label) =>
   `<p style="margin:20px 0"><a href="${href}" style="background:#e4a80c;color:#1c1300;padding:12px 20px;border-radius:6px;text-decoration:none;font-weight:bold">${label}</a></p>`;
 
 function sendReceiptReceived(order) {
+  const latest = order.paymentProofs?.[order.paymentProofs.length - 1];
+  const isReceipt = latest?.kind !== 'NOTICE';
+  const what = isReceipt ? 'transfer receipt' : 'notice that you have made the transfer';
   sendMail({
     to: order.customer.email,
-    subject: `We received your payment receipt for order ${order.orderNumber}`,
+    subject: `We received your payment ${isReceipt ? 'receipt' : 'notice'} for order ${order.orderNumber}`,
     html: layout(
-      'Receipt received',
+      isReceipt ? 'Receipt received' : 'Transfer notice received',
       `<p>Hello ${escapeHtml(order.customer.fullName)},</p>
-       <p>Thank you. We have received your transfer receipt for order <strong>${order.orderNumber}</strong>
+       <p>Thank you. We have received your ${what} for order <strong>${order.orderNumber}</strong>
        (${naira(order.total)}). Our team will confirm the payment in our bank account and email you as soon as it is confirmed.</p>
        ${button(orderLink(order), 'View order status')}`
     ),
   });
   notifyAdmin(
-    `Payment receipt uploaded for ${order.orderNumber}`,
+    `${isReceipt ? 'Payment receipt uploaded' : 'Transfer made'} for ${order.orderNumber}`,
     layout(
-      'New payment receipt to review',
-      `<p>${escapeHtml(order.customer.fullName)} uploaded a bank transfer receipt for order <strong>${order.orderNumber}</strong>
-       (${naira(order.total)}).</p>
-       ${button(`${config.frontendUrl}/admin/orders/${order._id}`, 'Review in admin')}`
+      isReceipt ? 'New payment receipt to review' : 'Customer says they have paid',
+      `<p>${escapeHtml(order.customer.fullName)} ${isReceipt ? 'uploaded a bank transfer receipt' : 'says they have made the transfer'}
+       for order <strong>${order.orderNumber}</strong> (${naira(order.total)}).
+       ${latest?.senderName ? `Sender account name: <strong>${escapeHtml(latest.senderName)}</strong>.` : ''}</p>
+       ${button(`${config.frontendUrl}/admin/orders/${order._id}`, 'Check and confirm payment')}`
     )
   );
 }

@@ -7,12 +7,15 @@ export const orderService = {
   getMine: (id) => api.get(`/orders/mine/${id}`).then((r) => r.data.order),
   cancelMine: (id) => api.post(`/orders/mine/${id}/cancel`).then((r) => r.data.order),
 
-  uploadPaymentProof: ({ orderNumber, email, file, note }, onProgress) => {
+  // Tells the farm a bank transfer was made. The receipt file is optional.
+  uploadPaymentProof: ({ orderNumber, email, file, note, senderName, transferDate }, onProgress) => {
     const form = new FormData();
     form.append('orderNumber', orderNumber);
     form.append('email', email);
     if (note) form.append('note', note);
-    form.append('receipt', file);
+    if (senderName) form.append('senderName', senderName);
+    if (transferDate) form.append('transferDate', transferDate);
+    if (file) form.append('receipt', file);
     return api
       .post('/orders/payment-proof', form, {
         timeout: 120000,

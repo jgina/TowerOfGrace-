@@ -1,11 +1,11 @@
 import { useState } from 'react';
-import { BadgeCheck, FileText, ExternalLink, XCircle, Landmark, Banknote } from 'lucide-react';
+import { BadgeCheck, FileText, ExternalLink, XCircle, Landmark, Banknote, BellRing } from 'lucide-react';
 import Modal from './Modal';
 import FormField from './FormField';
 import StatusBadge from './StatusBadge';
 import { adminService } from '../services/adminService';
 import { useToast } from '../context/ToastContext';
-import { formatCurrency, formatDateTime } from '../utils/format';
+import { formatCurrency, formatDate, formatDateTime } from '../utils/format';
 import './AdminPaymentReview.css';
 
 const isImage = (proof) => (proof.mimeType || '').startsWith('image/');
@@ -71,7 +71,7 @@ export default function AdminPaymentReview({ order, onChanged }) {
         {paid ? (
           <StatusBadge status="PAID">Money received</StatusBadge>
         ) : pendingProof ? (
-          <StatusBadge tone="info">Receipt to review</StatusBadge>
+          <StatusBadge tone="info">Customer says paid — check account</StatusBadge>
         ) : (
           <StatusBadge status="PENDING">Awaiting payment</StatusBadge>
         )}
@@ -98,9 +98,15 @@ export default function AdminPaymentReview({ order, onChanged }) {
           <ul className="receipt-list">
             {proofs.map((proof) => (
               <li key={proof._id} className={`receipt-item receipt-item--${proof.status.toLowerCase()}`}>
-                <a href={proof.url} target="_blank" rel="noreferrer" className="receipt-item__preview" aria-label="Open receipt">
-                  {isImage(proof) ? <img src={proof.url} alt={`Receipt uploaded ${formatDateTime(proof.uploadedAt)}`} /> : <FileText aria-hidden="true" />}
-                </a>
+                {proof.url ? (
+                  <a href={proof.url} target="_blank" rel="noreferrer" className="receipt-item__preview" aria-label="Open receipt">
+                    {isImage(proof) ? <img src={proof.url} alt={`Receipt uploaded ${formatDateTime(proof.uploadedAt)}`} /> : <FileText aria-hidden="true" />}
+                  </a>
+                ) : (
+                  <span className="receipt-item__preview receipt-item__preview--notice" aria-hidden="true">
+                    <BellRing />
+                  </span>
+                )}
                 <div className="receipt-item__info">
                   <div className="row row--wrap">
                     <StatusBadge tone={proof.status === 'ACCEPTED' ? 'success' : proof.status === 'REJECTED' ? 'danger' : 'info'} size="sm">
@@ -108,12 +114,25 @@ export default function AdminPaymentReview({ order, onChanged }) {
                     </StatusBadge>
                     <small>{formatDateTime(proof.uploadedAt)}</small>
                   </div>
-                  {proof.fileName && <span className="receipt-item__name">{proof.fileName}</span>}
+                  <span className="receipt-item__name">{proof.url ? proof.fileName || 'Transfer receipt' : 'Customer says the transfer has been made (no receipt)'}</span>
+                  {(proof.senderName || proof.transferDate) && (
+                    <span className="receipt-item__note">
+                      {proof.senderName && (
+                        <>
+                          Sender: <strong>{proof.senderName}</strong>
+                        </>
+                      )}
+                      {proof.senderName && proof.transferDate && ' · '}
+                      {proof.transferDate && `Paid on ${formatDate(proof.transferDate)}`}
+                    </span>
+                  )}
                   {proof.note && <span className="receipt-item__note">Customer note: “{proof.note}”</span>}
                   {proof.reviewNote && <span className="receipt-item__note">Rejection reason: {proof.reviewNote}</span>}
-                  <a href={proof.url} target="_blank" rel="noreferrer" className="link receipt-item__open">
-                    <ExternalLink /> Open full receipt
-                  </a>
+                  {proof.url && (
+                    <a href={proof.url} target="_blank" rel="noreferrer" className="link receipt-item__open">
+                      <ExternalLink /> Open full receipt
+                    </a>
+                  )}
                 </div>
               </li>
             ))}
@@ -126,7 +145,7 @@ export default function AdminPaymentReview({ order, onChanged }) {
           <div className="payment-review__actions">
             {pendingProof && (
               <button type="button" className="btn btn--ghost" onClick={() => setRejecting(true)}>
-                <XCircle /> Reject receipt
+                <XCircle /> Not received
               </button>
             )}
             <button type="button" className="btn btn--primary btn--lg" onClick={() => setConfirming(true)}>
@@ -166,7 +185,7 @@ export default function AdminPaymentReview({ order, onChanged }) {
       <Modal
         open={rejecting}
         onClose={() => setRejecting(false)}
-        title="Reject this receipt?"
+        title="Payment not found?"
         size="sm"
         footer={
           <>

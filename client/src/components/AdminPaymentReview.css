@@ -91,6 +91,15 @@
   color: var(--brand-green-600);
 }
 
+.receipt-item__preview--notice {
+  background: var(--brand-amber-100);
+  border-color: #f5d9a2;
+}
+
+.receipt-item__preview--notice svg {
+  color: var(--brand-amber-700);
+}
+
 .receipt-item__info {
   display: flex;
   flex-direction: column;

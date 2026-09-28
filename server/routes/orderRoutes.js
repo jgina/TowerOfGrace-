@@ -42,6 +42,8 @@ router.post(
     body('orderNumber').trim().notEmpty().withMessage('Order number is required'),
     body('email').trim().isEmail().withMessage('A valid email is required'),
     body('note').optional().trim().isLength({ max: 500 }),
+    body('senderName').optional().trim().isLength({ max: 120 }),
+    body('transferDate').optional({ values: 'falsy' }).isISO8601().withMessage('Invalid transfer date'),
   ]),
   orders.uploadPaymentProof
 );

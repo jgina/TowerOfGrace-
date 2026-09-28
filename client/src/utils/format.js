@@ -21,6 +21,18 @@ export function formatDateTime(value) {
     : date.toLocaleString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 }
 
+export function timeAgo(value) {
+  const seconds = Math.round((Date.now() - new Date(value).getTime()) / 1000);
+  if (Number.isNaN(seconds)) return '';
+  if (seconds < 60) return 'just now';
+  const minutes = Math.round(seconds / 60);
+  if (minutes < 60) return `${minutes} min ago`;
+  const hours = Math.round(minutes / 60);
+  if (hours < 24) return `${hours} hr${hours === 1 ? '' : 's'} ago`;
+  const days = Math.round(hours / 24);
+  return days < 7 ? `${days} day${days === 1 ? '' : 's'} ago` : formatDate(value);
+}
+
 export const toDateInput = (value) => (value ? new Date(value).toISOString().slice(0, 10) : '');
 
 export const humanize = (value = '') =>
