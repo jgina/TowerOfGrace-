@@ -328,15 +328,19 @@ exports.adminConfirmPayment = asyncHandler(async (req, res) => {
 exports.adminRejectProof = asyncHandler(async (req, res) => {
   const order = await Order.findById(req.params.id);
   if (!order) throw ApiError.notFound('Order not found');
-  const proof = [...(order.paymentProofs || [])].reverse().find((p) => p.status === 'PENDING');
-  if (!proof) throw ApiError.badRequest('There is no receipt waiting for review');
+  // "Payment not found" applies to every notice/receipt still waiting on this order.
+  const pending = (order.paymentProofs || []).filter((p) => p.status === 'PENDING');
+  if (!pending.length) throw ApiError.badRequest('There is no payment notice or receipt waiting for review');
 
   const { reason } = req.body;
-  proof.status = 'REJECTED';
-  proof.reviewNote = reason;
-  proof.reviewedBy = req.user._id;
-  proof.reviewedAt = new Date();
-  order.awaitingPaymentReview = order.paymentProofs.some((p) => p.status === 'PENDING');
+  const reviewedAt = new Date();
+  pending.forEach((proof) => {
+    proof.status = 'REJECTED';
+    proof.reviewNote = reason;
+    proof.reviewedBy = req.user._id;
+    proof.reviewedAt = reviewedAt;
+  });
+  order.awaitingPaymentReview = false;
   order.internalNotes.push({ note: `Receipt rejected: ${reason}`, author: req.user._id, authorName: req.user.name });
   await order.save();
   sendReceiptRejected(order, reason);

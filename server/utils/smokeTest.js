@@ -272,6 +272,41 @@ function scratchUri(uri) {
     assert.equal(wrongEmail.status, 404);
   });
 
+  await check('customer "I have made the transfer" notice (no file) alerts the admin in-app', async () => {
+    const notice = async () => {
+      const form = new FormData();
+      form.append('orderNumber', order.orderNumber);
+      form.append('email', 'guest@example.com');
+      form.append('senderName', 'Guest Buyer');
+      form.append('transferDate', new Date().toISOString().slice(0, 10));
+      const res = await fetch(`${base}/orders/payment-proof`, { method: 'POST', body: form });
+      return { status: res.status, body: await res.json() };
+    };
+    const first = await notice();
+    assert.equal(first.status, 201, JSON.stringify(first.body));
+    assert.equal(first.body.order.paymentProofs.at(-1).kind, 'NOTICE');
+    assert.equal(first.body.order.awaitingPaymentReview, true);
+    assert.equal(first.body.order.internalNotes, undefined, 'internal notes stay private');
+    const duplicate = await notice();
+    assert.equal(duplicate.status, 409, 'a second plain notice while one is pending is refused');
+
+    const feed = await call('GET', '/admin/notifications', null, adminToken);
+    assert.equal(feed.status, 200);
+    const types = feed.body.notifications.map((n) => n.type);
+    assert.ok(types.includes('TRANSFER_NOTICE'), types.join(','));
+    assert.ok(types.includes('NEW_ORDER'));
+    assert.ok(feed.body.unreadCount > 0);
+    const transfer = feed.body.notifications.find((n) => n.type === 'TRANSFER_NOTICE');
+    assert.equal(transfer.link, `/admin/orders/${order._id}`);
+    const read = await call('PATCH', `/admin/notifications/${transfer._id}/read`, null, adminToken);
+    assert.equal(read.status, 200);
+    await call('POST', '/admin/notifications/read-all', null, adminToken);
+    const after = await call('GET', '/admin/notifications', null, adminToken);
+    assert.equal(after.body.unreadCount, 0);
+    const customerFeed = await call('GET', '/admin/notifications', null, customerToken);
+    assert.equal(customerFeed.status, 403);
+  });
+
   await check('admin rejects a receipt with a reason; order shows it to the customer', async () => {
     // Simulate a stored upload (the real upload goes to Cloudinary, which the test does not touch).
     const { Order } = require('../models');

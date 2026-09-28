@@ -6,6 +6,7 @@ import {
 } from 'lucide-react';
 import Logo from '../components/Logo';
 import SEO from '../components/SEO';
+import AdminNotifications from '../components/AdminNotifications';
 import { PageLoader } from '../components/Loader';
 import { useAuth } from '../context/AuthContext';
 import './AdminLayout.css';
@@ -89,6 +90,7 @@ export default function AdminLayout() {
           </button>
           <span className="admin-topbar__title">Tower of Grace Farms · Admin</span>
           <div className="admin-topbar__user">
+            <AdminNotifications />
             <span className="admin-avatar" aria-hidden="true">
               {user?.name?.charAt(0)?.toUpperCase()}
             </span>
