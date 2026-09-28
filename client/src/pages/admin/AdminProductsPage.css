@@ -1,0 +1,38 @@
+.product-toggles {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.product-star {
+  width: 34px;
+  height: 34px;
+}
+
+.product-star svg {
+  width: 16px;
+  height: 16px;
+}
+
+.product-star.is-on {
+  border-color: var(--brand-amber-500);
+  background: var(--brand-amber-100);
+  color: var(--brand-amber-700);
+}
+
+.product-star.is-on svg {
+  fill: currentColor;
+}
+
+.product-status {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+@media (max-width: 720px) {
+  .product-toggles {
+    justify-content: flex-end;
+    flex-wrap: wrap;
+  }
+}

@@ -1,0 +1,15 @@
+.products-page__meta {
+  align-self: flex-start;
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius-sm);
+  background: var(--brand-green-50);
+  border: 1px solid var(--color-border);
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+}
+
+.products-page__meta strong {
+  font-family: var(--font-display);
+  font-size: var(--text-md);
+  color: var(--brand-green-700);
+}

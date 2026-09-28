@@ -1,0 +1,66 @@
+.list-editor {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.list-editor__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.list-editor__empty {
+  padding: var(--space-4);
+  border: 1px dashed var(--color-border-strong);
+  border-radius: var(--radius-sm);
+  font-size: var(--text-sm);
+  color: var(--color-text-subtle);
+  text-align: center;
+}
+
+.list-editor__item {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  border: 1px solid var(--color-border);
+  border-left: 3px solid var(--brand-green-600);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface-muted);
+}
+
+.list-editor__tools {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.list-editor__tools .icon-btn {
+  width: 30px;
+  height: 30px;
+}
+
+.list-editor__tools .icon-btn svg {
+  width: 14px;
+  height: 14px;
+}
+
+.list-editor__tools .icon-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.list-editor__num {
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  margin-right: auto;
+  border-radius: 50%;
+  background: var(--brand-green-800);
+  color: #fff;
+  font-size: var(--text-xs);
+  font-weight: var(--weight-bold);
+}

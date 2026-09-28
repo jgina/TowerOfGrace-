@@ -1,0 +1,4 @@
+/* Categories use the shared admin table and modal styles; page-specific tweaks live here. */
+.admin-content .cell-main .smart-image {
+  background: var(--brand-green-100);
+}

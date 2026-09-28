@@ -1,0 +1,84 @@
+.confirm-hero {
+  background:
+    radial-gradient(circle at 85% 20%, rgba(228, 168, 12, 0.2), transparent 45%),
+    var(--brand-green-800);
+  color: #fff;
+}
+
+.confirm-hero__inner {
+  display: flex;
+  align-items: center;
+  gap: var(--space-6);
+  padding-block: var(--space-12);
+}
+
+.confirm-hero__inner > svg {
+  width: 72px;
+  height: 72px;
+  flex-shrink: 0;
+  color: var(--brand-amber-500);
+}
+
+.confirm-hero h1 {
+  margin-block: var(--space-2);
+  font-size: var(--text-3xl);
+  color: #fff;
+}
+
+.confirm-hero p {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.confirm-hero strong {
+  color: var(--brand-amber-300);
+}
+
+.confirm-hero .eyebrow {
+  color: var(--brand-amber-300);
+}
+
+.confirm-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+.confirm-lookup {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  max-width: 480px;
+  padding: var(--space-6);
+}
+
+.confirm-lookup h2 {
+  font-size: var(--text-lg);
+  text-transform: uppercase;
+}
+
+.confirm-lookup .btn {
+  align-self: flex-start;
+}
+
+.confirm-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}
+
+@media (max-width: 640px) {
+  .confirm-hero__inner {
+    flex-direction: column;
+    align-items: flex-start;
+    padding-block: var(--space-8);
+  }
+
+  .confirm-hero__inner > svg {
+    width: 52px;
+    height: 52px;
+  }
+
+  .confirm-actions .btn {
+    flex: 1;
+  }
+}

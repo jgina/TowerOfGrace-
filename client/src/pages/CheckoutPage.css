@@ -1,0 +1,175 @@
+.checkout-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 380px;
+  gap: var(--space-6);
+  align-items: start;
+}
+
+.checkout-main {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+.checkout-step {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  margin: 0;
+  padding: var(--space-6);
+  min-width: 0;
+}
+
+.checkout-step__title {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  float: left;
+  width: 100%;
+  margin-bottom: var(--space-2);
+  padding: 0;
+  font-family: var(--font-display);
+  font-size: var(--text-md);
+  font-weight: var(--weight-heavy);
+  text-transform: uppercase;
+}
+
+.checkout-step__title + * {
+  clear: both;
+}
+
+.checkout-step__title span {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: var(--brand-green-800);
+  color: var(--brand-amber-500);
+  font-size: var(--text-sm);
+}
+
+.checkout-address {
+  margin-top: var(--space-2);
+}
+
+/* Radio option cards (delivery + payment) */
+.option-cards {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.option-cards--grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.option-card {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  border: 1.5px solid var(--color-border-strong);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  cursor: pointer;
+  transition: border-color var(--transition-fast), background var(--transition-fast);
+}
+
+.option-card:hover:not(.is-disabled) {
+  border-color: var(--brand-green-600);
+}
+
+.option-card input {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  accent-color: var(--brand-green-700);
+}
+
+.option-card > svg {
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+  color: var(--brand-green-600);
+}
+
+.option-card__body {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.option-card__body strong {
+  font-size: var(--text-sm);
+  font-weight: var(--weight-heavy);
+}
+
+.option-card__body small {
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+}
+
+.option-card__price {
+  font-weight: var(--weight-heavy);
+  color: var(--brand-green-800);
+}
+
+.option-card.is-selected {
+  border-color: var(--brand-amber-600);
+  background: var(--brand-amber-100);
+  box-shadow: inset 0 0 0 1px var(--brand-amber-600);
+}
+
+.option-card.is-disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  background: var(--color-surface-muted);
+}
+
+.checkout-hint {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-sm);
+  background: var(--brand-green-50);
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+}
+
+.checkout-hint svg,
+.checkout-secure svg {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  color: var(--brand-green-600);
+}
+
+.checkout-secure {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+}
+
+@media (max-width: 1080px) {
+  .checkout-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 640px) {
+  .checkout-step {
+    padding: var(--space-4);
+  }
+
+  .option-cards--grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

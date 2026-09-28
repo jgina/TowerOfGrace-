@@ -1,0 +1,6 @@
+.customer-avatar {
+  width: 38px;
+  height: 38px;
+  flex-shrink: 0;
+  font-size: var(--text-sm);
+}

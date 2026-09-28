@@ -1,0 +1,43 @@
+.smart-image {
+  position: relative;
+  overflow: hidden;
+  background: var(--brand-green-100);
+}
+
+.smart-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.smart-image__placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  width: 100%;
+  height: 100%;
+  min-height: 100%;
+  padding: var(--space-4);
+  background:
+    radial-gradient(circle at 30% 20%, rgba(228, 168, 12, 0.16), transparent 55%),
+    linear-gradient(135deg, var(--brand-green-100), #d9eadf);
+  color: var(--brand-green-600);
+  text-align: center;
+}
+
+.smart-image__placeholder svg {
+  width: 30px;
+  height: 30px;
+  opacity: 0.55;
+}
+
+.smart-image__placeholder span {
+  font-family: var(--font-display);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-heavy);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  opacity: 0.8;
+}

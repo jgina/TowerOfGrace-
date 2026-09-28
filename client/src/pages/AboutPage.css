@@ -1,0 +1,41 @@
+.about-vm {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-6);
+}
+
+.about-vm__card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  padding: clamp(1.75rem, 4vw, 2.75rem);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-left: 4px solid var(--brand-amber-500);
+  border-radius: var(--radius-md);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.about-vm__card svg {
+  width: 36px;
+  height: 36px;
+  color: var(--brand-amber-500);
+}
+
+.about-vm__card h2 {
+  font-size: var(--text-xl);
+  font-weight: var(--weight-black);
+  text-transform: uppercase;
+}
+
+.about-vm__card p {
+  font-size: var(--text-md);
+  line-height: 1.75;
+  color: rgba(255, 255, 255, 0.8);
+  white-space: pre-line;
+}
+
+@media (max-width: 960px) {
+  .about-vm {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

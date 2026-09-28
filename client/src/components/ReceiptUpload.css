@@ -1,0 +1,152 @@
+.receipt {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  padding-top: var(--space-4);
+  border-top: 1px dashed var(--brand-green-200);
+}
+
+.receipt__status {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  border-radius: var(--radius-md);
+  font-size: var(--text-sm);
+}
+
+.receipt__status > svg {
+  width: 22px;
+  height: 22px;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.receipt__status strong {
+  display: block;
+  margin-bottom: 2px;
+  font-size: var(--text-base);
+}
+
+.receipt__status--pending {
+  background: var(--color-info-bg);
+  color: #164b75;
+}
+
+.receipt__status--pending > svg {
+  color: var(--color-info);
+  animation: receipt-pulse 2s ease-in-out infinite;
+}
+
+.receipt__status--rejected {
+  background: var(--color-danger-bg);
+  color: #8e2a20;
+}
+
+.receipt__status--rejected > svg {
+  color: var(--color-danger);
+}
+
+.receipt__links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+  margin-top: var(--space-2);
+}
+
+.receipt__links .link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: var(--text-sm);
+}
+
+.receipt__links svg {
+  width: 14px;
+  height: 14px;
+}
+
+.receipt__linkbtn {
+  padding: 0;
+  border: 0;
+  background: none;
+}
+
+.receipt__form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.receipt__title {
+  font-size: var(--text-sm);
+  font-weight: var(--weight-heavy);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--brand-green-800);
+}
+
+.receipt__drop {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  width: 100%;
+  padding: var(--space-4);
+  border: 1.5px dashed var(--brand-green-600);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  text-align: left;
+  transition: background var(--transition-fast), border-color var(--transition-fast);
+}
+
+.receipt__drop:hover {
+  background: var(--brand-green-50);
+}
+
+.receipt__drop.has-file {
+  border-style: solid;
+  border-color: var(--brand-amber-500);
+  background: var(--brand-amber-100);
+}
+
+.receipt__drop svg {
+  width: 26px;
+  height: 26px;
+  flex-shrink: 0;
+  color: var(--brand-green-600);
+}
+
+.receipt__drop span {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.receipt__drop strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.receipt__drop small {
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+}
+
+.receipt__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-2);
+}
+
+@keyframes receipt-pulse {
+  50% {
+    opacity: 0.45;
+  }
+}
+
+@media (max-width: 640px) {
+  .receipt__actions .btn {
+    flex: 1;
+  }
+}

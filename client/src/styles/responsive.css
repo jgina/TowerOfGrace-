@@ -1,0 +1,59 @@
+/*
+  Shared breakpoints (component/page CSS files use the same values):
+  - Laptop:  max-width 1200px
+  - Tablet:  max-width 960px
+  - Mobile:  max-width 640px
+*/
+
+@media (max-width: 1200px) {
+  :root {
+    --text-4xl: 2.6rem;
+  }
+}
+
+@media (max-width: 960px) {
+  :root {
+    --header-height: 72px;
+    --text-3xl: 2rem;
+    --text-4xl: 2.25rem;
+  }
+
+  .form-grid--3 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .hide-tablet {
+    display: none !important;
+  }
+}
+
+@media (max-width: 640px) {
+  :root {
+    --text-2xl: 1.6rem;
+    --text-3xl: 1.75rem;
+    --text-4xl: 2rem;
+  }
+
+  .form-grid,
+  .form-grid--3 {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .form-grid .span-2 {
+    grid-column: auto;
+  }
+
+  .hide-mobile {
+    display: none !important;
+  }
+
+  .btn--block-mobile {
+    width: 100%;
+  }
+}
+
+@media (min-width: 641px) {
+  .show-mobile {
+    display: none !important;
+  }
+}

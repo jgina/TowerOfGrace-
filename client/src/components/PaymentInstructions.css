@@ -1,0 +1,165 @@
+.pay-box {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-4);
+  padding: var(--space-5) var(--space-6);
+  border: 1px solid var(--brand-green-200);
+  border-radius: var(--radius-md);
+  background: var(--brand-green-50);
+}
+
+.pay-box > svg {
+  width: 28px;
+  height: 28px;
+  flex-shrink: 0;
+  color: var(--brand-green-600);
+}
+
+.pay-box > div {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  font-size: var(--text-sm);
+}
+
+.pay-box strong {
+  font-size: var(--text-md);
+}
+
+.pay-box--warning {
+  align-items: center;
+  border-color: #f5d9a2;
+  background: var(--brand-amber-100);
+}
+
+.pay-box--warning > svg {
+  color: var(--brand-amber-700);
+}
+
+.pay-box--stacked {
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.pay-box__row {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-4);
+}
+
+.pay-box__row > svg {
+  width: 28px;
+  height: 28px;
+  flex-shrink: 0;
+  color: var(--brand-green-600);
+}
+
+.pay-box__body {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: var(--space-2);
+  min-width: 0;
+  font-size: var(--text-sm);
+}
+
+.pay-box__body strong {
+  font-size: var(--text-md);
+}
+
+.pay-box--success {
+  align-items: center;
+  border-color: #a8dcbc;
+  background: var(--color-success-bg);
+}
+
+.pay-box--success > svg {
+  width: 36px;
+  height: 36px;
+  color: var(--color-success);
+}
+
+.pay-box--success strong {
+  color: var(--color-success);
+}
+
+/* Shown when the confirmation arrives while the customer is on the page. */
+.pay-box--celebrate {
+  animation: pay-celebrate 0.9s cubic-bezier(0.19, 1, 0.22, 1);
+}
+
+.pay-box--celebrate > svg {
+  animation: pay-badge 0.9s cubic-bezier(0.19, 1, 0.22, 1) 0.15s backwards;
+}
+
+@keyframes pay-celebrate {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.98);
+    box-shadow: 0 0 0 0 rgba(31, 138, 76, 0.5);
+  }
+  60% {
+    box-shadow: 0 0 0 12px rgba(31, 138, 76, 0);
+  }
+}
+
+@keyframes pay-badge {
+  from {
+    transform: scale(0.3) rotate(-25deg);
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pay-box--celebrate,
+  .pay-box--celebrate > svg {
+    animation: none;
+  }
+}
+
+.pay-box__bank {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-3);
+  margin: var(--space-2) 0;
+}
+
+.pay-box__bank dt {
+  font-size: 0.68rem;
+  font-weight: var(--weight-bold);
+  letter-spacing: var(--tracking-caps);
+  text-transform: uppercase;
+  color: var(--color-text-subtle);
+}
+
+.pay-box__bank dd {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin: 0;
+  font-weight: var(--weight-heavy);
+}
+
+.pay-box__bank .icon-btn {
+  width: 28px;
+  height: 28px;
+}
+
+.pay-box__bank .icon-btn svg {
+  width: 14px;
+  height: 14px;
+}
+
+@media (max-width: 640px) {
+  .pay-box,
+  .pay-box--warning {
+    flex-direction: column;
+    align-items: stretch;
+    padding: var(--space-4);
+  }
+
+  .pay-box__bank {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

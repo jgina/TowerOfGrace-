@@ -1,0 +1,53 @@
+.bulk-detail {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  font-size: var(--text-sm);
+}
+
+.bulk-detail__grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-5);
+}
+
+.bulk-detail__grid > div {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding: var(--space-4);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface-muted);
+}
+
+.bulk-detail__link {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  word-break: break-word;
+}
+
+.bulk-detail__link svg {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+  color: var(--brand-green-600);
+}
+
+a.bulk-detail__link:hover {
+  color: var(--brand-green-600);
+}
+
+.bulk-detail__message {
+  margin-top: var(--space-1);
+  padding: var(--space-3) var(--space-4);
+  border-left: 3px solid var(--brand-amber-500);
+  background: var(--brand-amber-100);
+  white-space: pre-line;
+}
+
+@media (max-width: 640px) {
+  .bulk-detail__grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

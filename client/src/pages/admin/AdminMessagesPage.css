@@ -1,0 +1,65 @@
+.msg-unread .cell-title::before {
+  content: '';
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  margin-right: 6px;
+  border-radius: 50%;
+  background: var(--brand-amber-500);
+  vertical-align: middle;
+}
+
+.msg-preview {
+  max-width: 420px;
+}
+
+.msg-preview .cell-sub {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.msg-status {
+  width: auto;
+  min-height: 44px;
+}
+
+.msg-detail {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.msg-detail dl {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-6);
+  margin: 0;
+  font-size: var(--text-sm);
+}
+
+.msg-detail dt {
+  font-size: 0.68rem;
+  font-weight: var(--weight-bold);
+  letter-spacing: var(--tracking-caps);
+  text-transform: uppercase;
+  color: var(--color-text-subtle);
+}
+
+.msg-detail dd {
+  margin: 0;
+}
+
+.msg-detail__body {
+  padding: var(--space-4);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface-muted);
+  line-height: 1.7;
+  white-space: pre-line;
+}
+
+@media (max-width: 640px) {
+  .msg-preview {
+    max-width: 200px;
+  }
+}

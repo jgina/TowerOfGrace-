@@ -1,0 +1,113 @@
+.account-meta {
+  font-size: var(--text-xs);
+}
+
+.account-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-3);
+  margin-top: var(--space-5);
+}
+
+.order-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.order-list__item {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: var(--space-4);
+  padding: var(--space-4) var(--space-5);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.order-list__item:hover {
+  border-color: var(--brand-green-600);
+  box-shadow: var(--shadow-sm);
+}
+
+.order-list__number {
+  display: block;
+  font-family: var(--font-display);
+  font-weight: var(--weight-black);
+  color: var(--brand-green-800);
+}
+
+.order-list__meta {
+  font-size: var(--text-xs);
+  color: var(--color-text-subtle);
+}
+
+.order-list__total {
+  font-family: var(--font-display);
+  font-weight: var(--weight-black);
+}
+
+.order-list__badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.address-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: var(--space-4);
+}
+
+.address-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-5);
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-md);
+  font-size: var(--text-sm);
+}
+
+.address-card.is-default {
+  border-color: var(--brand-amber-500);
+  background: var(--brand-amber-100);
+}
+
+.address-card__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.address-card__head strong {
+  text-transform: uppercase;
+}
+
+.address-card__actions {
+  display: flex;
+  gap: var(--space-2);
+  margin-top: auto;
+  padding-top: var(--space-3);
+}
+
+.order-detail-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin-bottom: var(--space-5);
+}
+
+@media (max-width: 720px) {
+  .order-list__item {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .order-list__badges {
+    grid-column: 1 / -1;
+  }
+}
