@@ -9,9 +9,10 @@ import { lossReasonsFor } from '../utils/constants';
 import './RecordLossModal.css';
 
 const today = () => new Date().toISOString().slice(0, 10);
-const blank = (preset = {}) => ({
-  productId: preset.productId || '',
-  variantId: preset.variantId || '',
+// preset may be undefined or null (nothing pre-selected).
+const blank = (preset) => ({
+  productId: preset?.productId || '',
+  variantId: preset?.variantId || '',
   quantity: '',
   reason: '',
   occurredOn: today(),

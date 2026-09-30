@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { Search, Boxes, Lock, AlertTriangle, PackageX, SlidersHorizontal, Warehouse, Skull } from 'lucide-react';
+import { Search, Boxes, Lock, AlertTriangle, PackageX, SlidersHorizontal, Warehouse, Skull, Truck } from 'lucide-react';
 import RecordLossModal from '../../components/RecordLossModal';
 import AdminPageHeader from '../../components/AdminPageHeader';
 import AdminStatsCard from '../../components/AdminStatsCard';
@@ -82,17 +82,23 @@ export default function AdminInventoryPage() {
       <AdminPageHeader
         eyebrow="Inventory"
         title="Stock & Weight Ledger"
-        subtitle="On-hand stock for every product and weight or pack option. Reserved stock is held by orders that are not yet completed."
+        subtitle="On-hand stock for every product and weight or pack option. Reserved stock is held by orders that are not yet completed; units at market have already left the farm."
         actions={
-          <Link to="/admin/losses" className="btn btn--outline">
-            <Skull /> Mortality & Losses
-          </Link>
+          <>
+            <Link to="/admin/market-trips" className="btn btn--outline">
+              <Truck /> Market Trips
+            </Link>
+            <Link to="/admin/losses" className="btn btn--outline">
+              <Skull /> Mortality & Losses
+            </Link>
+          </>
         }
       />
 
       <div className="stats-grid inventory-stats">
         <AdminStatsCard tone="dark" icon={Boxes} label="Units on hand" value={summary?.totalStock ?? '—'} hint={`${summary?.rows ?? 0} stock lines`} />
         <AdminStatsCard tone="blue" icon={Lock} label="Reserved" value={summary?.totalReserved ?? '—'} hint="Held by open orders" />
+        <AdminStatsCard icon={Truck} label="At market" value={summary?.totalAtMarket ?? '—'} hint="Off the farm, not in stock" to="/admin/market-trips" />
         <AdminStatsCard tone="amber" icon={AlertTriangle} label="Low stock lines" value={summary?.lowStock ?? '—'} />
         <AdminStatsCard tone="red" icon={PackageX} label="Out of stock lines" value={summary?.outOfStock ?? '—'} />
       </div>
@@ -155,6 +161,12 @@ export default function AdminInventoryPage() {
             { key: 'sku', header: 'SKU', hideOnMobile: true, render: (r) => r.sku || '—' },
             { key: 'stock', header: 'On hand', align: 'right', render: (r) => <span className="cell-number">{r.stock}</span> },
             { key: 'reservedStock', header: 'Reserved', align: 'right', render: (r) => <span className="cell-number inventory-reserved">{r.reservedStock}</span> },
+            {
+              key: 'atMarket',
+              header: 'At market',
+              align: 'right',
+              render: (r) => <span className={`cell-number ${r.atMarket ? 'inventory-market' : ''}`}>{r.atMarket || 0}</span>,
+            },
             { key: 'availableStock', header: 'Available', align: 'right', render: (r) => <strong className="cell-number">{r.availableStock}</strong> },
             {
               key: 'status',

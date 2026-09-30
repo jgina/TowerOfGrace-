@@ -9,7 +9,7 @@ import { ErrorState } from '../components/Loader';
 import useFetch from '../hooks/useFetch';
 import { siteService } from '../services/siteService';
 import { GALLERY_CATEGORIES } from '../utils/constants';
-import { DEFAULT_GALLERY } from '../assets/images';
+import { DEFAULT_GALLERY, PAGE_IMAGES } from '../assets/images';
 import './GalleryPage.css';
 
 export default function GalleryPage() {
@@ -42,7 +42,7 @@ export default function GalleryPage() {
   return (
     <>
       <SEO title="Gallery" description="Photos from Tower of Grace Farms — our birds, facilities, production and deliveries." />
-      <PageHero title="Gallery" subtitle="A look around Tower of Grace Farms." crumbs={[{ label: 'Gallery' }]} />
+      <PageHero title="Gallery" subtitle="A look around Tower of Grace Farms." image={PAGE_IMAGES.gallery} crumbs={[{ label: 'Gallery' }]} />
 
       <section className="section">
         <div className="container">

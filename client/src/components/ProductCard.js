@@ -39,7 +39,7 @@ export default function ProductCard({ product }) {
   return (
     <article className="product-card">
       <Link to={url} className="product-card__media" aria-label={product.name}>
-        <SmartImage src={image?.url} alt={image?.alt || product.name} width={600} ratio="4 / 3" label={product.category?.name} />
+        <SmartImage src={image?.url} alt={image?.alt || product.name} width={600} ratio="4 / 3" label={product.category?.name} fit="natural" />
         {product.category?.name && <span className="product-card__tag">{product.category.name}</span>}
         {showBadge && (
           <span className="product-card__status">

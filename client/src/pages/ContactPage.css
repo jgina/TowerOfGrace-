@@ -142,3 +142,7 @@ a.contact-card:hover {
     width: 100%;
   }
 }
+
+.contact-faq {
+  max-width: 880px;
+}

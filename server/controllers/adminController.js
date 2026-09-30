@@ -1,11 +1,13 @@
 const mongoose = require('mongoose');
-const { Product, Order, User, BulkOrder, ContactMessage, StockLoss } = require('../models');
+const { Product, Order, User, BulkOrder, ContactMessage, StockLoss, MarketTrip, FlockBatch, FeedItem } = require('../models');
 const ApiError = require('../utils/ApiError');
 const asyncHandler = require('../utils/asyncHandler');
 const escapeRegex = require('../utils/escapeRegex');
 const { getPagination, buildMeta } = require('../utils/pagination');
 const { stockStatus } = require('../services/productPresenter');
 const { refreshAggregates } = require('../services/inventoryService');
+const ledger = require('../services/stockLedger');
+const { unitsAtMarket, lineKey: tripLineKey } = require('./marketTripController');
 
 // ---------- Dashboard ----------
 
@@ -39,6 +41,9 @@ exports.getDashboard = asyncHandler(async (req, res) => {
     outOfStockCount,
     recentLosses,
     receiptsToReview,
+    marketAgg,
+    openBatches,
+    feedItems,
   ] = await Promise.all([
     Product.countDocuments(),
     Order.countDocuments(),
@@ -82,7 +87,21 @@ exports.getDashboard = asyncHandler(async (req, res) => {
       },
     ]),
     Order.countDocuments({ awaitingPaymentReview: true, paymentStatus: { $ne: 'PAID' } }),
+    MarketTrip.aggregate([
+      { $match: { $or: [{ status: 'OUT' }, { status: 'CLOSED', closedAt: { $gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) } }] } },
+      { $unwind: '$items' },
+      {
+        $group: {
+          _id: null,
+          atMarket: { $sum: { $cond: [{ $eq: ['$status', 'OUT'] }, '$items.quantityOut', 0] } },
+          sales30d: { $sum: { $cond: [{ $eq: ['$status', 'CLOSED'] }, '$items.salesAmount', 0] } },
+        },
+      },
+    ]),
+    FlockBatch.find({ status: { $in: ['ACTIVE', 'READY'] } }),
+    FeedItem.find({ isActive: true }).select('name stockBags lowStockBags').lean(),
   ]);
+  const batchSummaries = openBatches.map((b) => ({ status: b.status, ...b.counts() }));
 
   // Build a continuous six-month series so empty months render as zero rather than disappearing.
   const series = [];
@@ -114,6 +133,12 @@ exports.getDashboard = asyncHandler(async (req, res) => {
       birdLosses30d: recentLosses[0]?.birds || 0,
       eggLosses30d: recentLosses[0]?.eggs || 0,
       receiptsToReview,
+      unitsAtMarket: marketAgg[0]?.atMarket || 0,
+      marketSales30d: marketAgg[0]?.sales30d || 0,
+      birdsGrowing: batchSummaries.reduce((s, b) => s + b.live, 0),
+      batchesReady: batchSummaries.filter((b) => b.status === 'READY').length,
+      feedBags: Math.round(feedItems.reduce((s, f) => s + f.stockBags, 0) * 100) / 100,
+      lowFeeds: feedItems.filter((f) => f.stockBags <= f.lowStockBags).map((f) => ({ name: f.name, stockBags: f.stockBags })),
     },
     lowStock,
     outOfStock,
@@ -205,7 +230,10 @@ exports.listInventory = asyncHandler(async (req, res) => {
   }
   if (category && mongoose.isValidObjectId(category)) filter.category = category;
 
-  const products = await Product.find(filter).sort({ name: 1 }).populate('category', 'name').lean();
+  const [products, atMarket] = await Promise.all([
+    Product.find(filter).sort({ name: 1 }).populate('category', 'name').lean(),
+    unitsAtMarket(),
+  ]);
   let rows = [];
   products.forEach((product) => {
     const threshold = product.lowStockThreshold ?? 10;
@@ -224,6 +252,8 @@ exports.listInventory = asyncHandler(async (req, res) => {
         sku: variant?.sku || product.sku,
         stock: src.stock || 0,
         reservedStock: src.reservedStock || 0,
+        // Already deducted from stock; shown so staff know how many are away at market.
+        atMarket: atMarket.get(tripLineKey(product._id, variant?._id)) || 0,
         availableStock: availableQty,
         lowStockThreshold: threshold,
         isActive: product.isActive && (variant ? variant.isActive : true),
@@ -240,6 +270,7 @@ exports.listInventory = asyncHandler(async (req, res) => {
     rows: rows.length,
     totalStock: rows.reduce((s, r) => s + r.stock, 0),
     totalReserved: rows.reduce((s, r) => s + r.reservedStock, 0),
+    totalAtMarket: rows.reduce((s, r) => s + r.atMarket, 0),
     lowStock: rows.filter((r) => r.status === 'low_stock').length,
     outOfStock: rows.filter((r) => r.availableStock <= 0).length,
   };
@@ -265,6 +296,7 @@ exports.updateInventory = asyncHandler(async (req, res) => {
     throw ApiError.badRequest(`Stock cannot be lower than the ${holder.reservedStock} unit(s) reserved by pending orders`);
   }
 
+  const previous = holder.stock || 0;
   holder.stock = next;
   if (lowStockThreshold !== undefined && lowStockThreshold !== '') {
     const threshold = Number(lowStockThreshold);
@@ -273,5 +305,15 @@ exports.updateInventory = asyncHandler(async (req, res) => {
   }
   await product.save();
   await refreshAggregates(product._id);
+  await product.populate('category', 'name slug');
+  await ledger.record({
+    product,
+    holder: variantId ? holder : undefined,
+    type: 'ADJUSTMENT',
+    quantity: next - previous,
+    balanceAfter: next,
+    note: req.body.note || 'Stock updated from inventory ledger',
+    user: req.user,
+  });
   res.json({ success: true, message: 'Inventory updated' });
 });

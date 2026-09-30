@@ -3,6 +3,9 @@ import { Mail, MapPin, MessageCircle, Phone, Clock, Send } from 'lucide-react';
 import SEO, { useOrganizationJsonLd } from '../components/SEO';
 import PageHero from '../components/PageHero';
 import FormField from '../components/FormField';
+import SectionHeading from '../components/SectionHeading';
+import ImageCardGrid from '../components/ImageCardGrid';
+import { FaqList } from '../components/InfoBlocks';
 import { useContent } from '../context/ContentContext';
 import { siteService } from '../services/siteService';
 import { whatsappLink } from '../utils/format';
@@ -138,6 +141,24 @@ export default function ContactPage() {
           </div>
         </div>
       </section>
+
+      {contact.help?.items?.length > 0 && (
+        <section className="section section--white">
+          <div className="container">
+            <SectionHeading eyebrow={contact.help.eyebrow} title={contact.help.title} />
+            <ImageCardGrid items={contact.help.items} slotPrefix="contact-help" columns={3} ratio="16 / 10" />
+          </div>
+        </section>
+      )}
+
+      {contact.faqs?.length > 0 && (
+        <section className="section">
+          <div className="container contact-faq">
+            <SectionHeading eyebrow="FAQ" title="Frequently Asked Questions" text="Quick answers to the questions customers ask us most." align="center" />
+            <FaqList items={contact.faqs} />
+          </div>
+        </section>
+      )}
     </>
   );
 }

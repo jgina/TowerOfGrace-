@@ -73,6 +73,19 @@
   color: var(--color-danger);
 }
 
+.losses-trip-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: var(--text-xs);
+  white-space: nowrap;
+}
+
+.losses-trip-link svg {
+  width: 14px;
+  height: 14px;
+}
+
 .losses-notes {
   display: -webkit-box;
   max-width: 260px;

@@ -3,9 +3,13 @@ const { body } = require('express-validator');
 const validate = require('../middleware/validate');
 const { adminOnly } = require('../middleware/auth');
 const upload = require('../middleware/upload');
-const { Order, Gallery, StockLoss } = require('../models');
+const { Order, Gallery, StockLoss, FeedItem } = require('../models');
 const losses = require('../controllers/stockLossController');
 const notifications = require('../controllers/notificationController');
+const marketTrips = require('../controllers/marketTripController');
+const reports = require('../controllers/reportController');
+const batches = require('../controllers/flockBatchController');
+const feeds = require('../controllers/feedController');
 const admin = require('../controllers/adminController');
 const products = require('../controllers/productController');
 const orders = require('../controllers/orderController');
@@ -20,6 +24,9 @@ const uploads = require('../controllers/uploadController');
 router.use(adminOnly);
 
 router.get('/dashboard', admin.getDashboard);
+
+// Monthly / annual activity statement (printable report)
+router.get('/reports/statement', reports.getStatement);
 
 // In-app notifications (bell in the admin top bar)
 router.get('/notifications', notifications.listNotifications);
@@ -78,6 +85,141 @@ router.post(
   losses.createLoss
 );
 router.post('/stock-losses/:id/reverse', validate([body('note').optional().trim().isLength({ max: 500 })]), losses.reverseLoss);
+
+// Flock batches — growing birds tracked from arrival; moved into stock only when confirmed ready
+const batchRules = [
+  body('breed').optional().trim().isLength({ max: 80 }),
+  body('supplier').optional().trim().isLength({ max: 150 }),
+  body('house').optional().trim().isLength({ max: 80 }),
+  body('purchaseDate').optional({ values: 'falsy' }).isISO8601().withMessage('Invalid arrival date'),
+  body('ageAtPurchaseDays').optional({ values: 'falsy' }).isInt({ min: 1, max: 3650 }).withMessage('Age on arrival must be 1 day or more'),
+  body('quantityPurchased').optional().isInt({ min: 1, max: 10000000 }).withMessage('Quantity must be at least 1'),
+  body('unitCost').optional({ values: 'falsy' }).isFloat({ min: 0 }).withMessage('Cost must be 0 or more'),
+  body('targetAgeDays').optional().isInt({ min: 1, max: 3650 }).withMessage('Target age must be at least 1 day'),
+  body('targetWeightKg').optional({ values: 'falsy' }).isFloat({ min: 0 }).withMessage('Target weight must be 0 or more'),
+  body('notes').optional().trim().isLength({ max: 1000 }),
+];
+router.get('/batches', batches.listBatches);
+router.get('/batches/:id', batches.getBatch);
+router.post(
+  '/batches',
+  validate([
+    body('category').isMongoId().withMessage('Choose a category'),
+    body('quantityPurchased').isInt({ min: 1, max: 10000000 }).withMessage('Enter how many birds arrived'),
+    body('targetAgeDays').isInt({ min: 1, max: 3650 }).withMessage('Enter the age (in days) the birds are sold at'),
+    body('batchCode').optional({ values: 'falsy' }).trim().isLength({ max: 40 }),
+    ...batchRules,
+  ]),
+  batches.createBatch
+);
+router.put('/batches/:id', validate(batchRules), batches.updateBatch);
+router.post(
+  '/batches/:id/mortality',
+  validate([
+    body('quantity').isInt({ min: 1 }).withMessage('Enter how many birds died'),
+    body('reason').isIn(StockLoss.REASONS).withMessage('Choose a reason'),
+    body('date').optional({ values: 'falsy' }).isISO8601(),
+    body('note').optional().trim().isLength({ max: 500 }),
+  ]),
+  batches.recordMortality
+);
+router.post(
+  '/batches/:id/weighings',
+  validate([
+    body('avgWeightKg').isFloat({ gt: 0, max: 100 }).withMessage('Enter the average weight in kg'),
+    body('sampleSize').optional({ values: 'falsy' }).isInt({ min: 1 }),
+    body('date').optional({ values: 'falsy' }).isISO8601(),
+    body('note').optional().trim().isLength({ max: 500 }),
+  ]),
+  batches.recordWeighing
+);
+router.post(
+  '/batches/:id/transfer',
+  validate([
+    body('allocations').isArray({ min: 1, max: 20 }).withMessage('Choose where the birds go'),
+    body('allocations.*.productId').isMongoId().withMessage('Choose a product for every line'),
+    body('allocations.*.quantity').isInt({ min: 0 }).withMessage('Quantities must be whole numbers'),
+    body('note').optional().trim().isLength({ max: 500 }),
+  ]),
+  batches.transferToStock
+);
+router.post('/batches/:id/close', validate([body('reason').optional().trim().isLength({ max: 500 })]), batches.closeBatch);
+
+// Feed store — bags bought, bags fed daily (optionally per batch), remaining stock and low-feed alerts
+const feedRules = [
+  body('name').optional().trim().notEmpty().withMessage('Feed name is required').isLength({ max: 100 }),
+  body('brand').optional().trim().isLength({ max: 80 }),
+  body('feedType').optional().isIn(FeedItem.TYPES),
+  body('bagSizeKg').optional({ values: 'falsy' }).isFloat({ min: 0.1, max: 1000 }).withMessage('Bag size must be more than 0 kg'),
+  body('lowStockBags').optional().isFloat({ min: 0, max: 100000 }).withMessage('Alert level must be 0 or more bags'),
+  body('notes').optional().trim().isLength({ max: 500 }),
+  body('isActive').optional().isBoolean(),
+];
+router.get('/feeds', feeds.listFeeds);
+router.get('/feeds/transactions', feeds.listTransactions);
+router.get('/feeds/batch/:batchId', feeds.batchFeedUsage);
+router.get('/feeds/targets', feeds.feedingTargets);
+router.post(
+  '/feeds',
+  validate([body('name').trim().notEmpty().withMessage('Feed name is required'), body('openingBags').optional({ values: 'falsy' }).isFloat({ min: 0 }), ...feedRules]),
+  feeds.createFeed
+);
+router.put('/feeds/:id', validate(feedRules), feeds.updateFeed);
+router.post(
+  '/feeds/usage',
+  validate([
+    body('date').optional({ values: 'falsy' }).isISO8601().withMessage('Invalid date'),
+    body('lines').isArray({ min: 1, max: 30 }).withMessage('Add at least one feed used'),
+    body('lines.*.feedId').isMongoId().withMessage('Choose a feed on every line'),
+    body('lines.*.bags').isFloat({ gt: 0, max: 100000 }).withMessage('Bags used must be more than 0'),
+    body('lines.*.fedTo').optional({ values: 'falsy' }).isIn(['FARM', 'BATCH', 'STOCK', 'GROUP']).withMessage('Choose who was fed'),
+    body('lines.*.batchId').optional({ values: 'falsy' }).isMongoId(),
+    body('lines.*.productId').optional({ values: 'falsy' }).isMongoId(),
+    body('lines.*.groupName').optional().trim().isLength({ max: 120 }),
+    body('note').optional().trim().isLength({ max: 500 }),
+  ]),
+  feeds.recordUsage
+);
+router.post(
+  '/feeds/:id/purchases',
+  validate([
+    body('bags').isFloat({ gt: 0, max: 100000 }).withMessage('Bags bought must be more than 0'),
+    body('costPerBag').optional({ values: 'falsy' }).isFloat({ min: 0 }),
+    body('supplier').optional().trim().isLength({ max: 150 }),
+    body('date').optional({ values: 'falsy' }).isISO8601().withMessage('Invalid date'),
+    body('note').optional().trim().isLength({ max: 500 }),
+  ]),
+  feeds.recordPurchase
+);
+router.post(
+  '/feeds/:id/adjust',
+  validate([body('note').trim().notEmpty().withMessage('Give a reason for the correction').isLength({ max: 500 }), body('date').optional({ values: 'falsy' }).isISO8601()]),
+  feeds.adjustStock
+);
+
+// Market trips — stock taken to market, then reconciled as sold / returned / lost
+router.get('/market-trips', marketTrips.listTrips);
+router.get('/market-trips/:id', marketTrips.getTrip);
+router.post(
+  '/market-trips',
+  validate([
+    body('market').trim().notEmpty().withMessage('Enter the market or destination').isLength({ max: 150 }),
+    body('tripDate').optional({ values: 'falsy' }).isISO8601().withMessage('Invalid trip date'),
+    body('responsiblePerson').optional().trim().isLength({ max: 120 }),
+    body('vehicle').optional().trim().isLength({ max: 80 }),
+    body('notes').optional().trim().isLength({ max: 1000 }),
+    body('items').isArray({ min: 1, max: 50 }).withMessage('Add at least one product'),
+    body('items.*.productId').isMongoId().withMessage('Choose a product for every line'),
+    body('items.*.quantity').isInt({ min: 1, max: 1000000 }).withMessage('Every line needs a quantity of at least 1'),
+  ]),
+  marketTrips.createTrip
+);
+router.post(
+  '/market-trips/:id/close',
+  validate([body('items').isArray({ min: 1 }).withMessage('Enter the results for every item'), body('closingNotes').optional().trim().isLength({ max: 1000 })]),
+  marketTrips.closeTrip
+);
+router.post('/market-trips/:id/cancel', validate([body('reason').optional().trim().isLength({ max: 500 })]), marketTrips.cancelTrip);
 
 // Orders
 router.get('/orders', orders.adminListOrders);

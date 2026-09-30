@@ -8,6 +8,7 @@ const CONTENT_KEYS = [
   'farm',
   'quality',
   'production',
+  'shop',
   'contact',
   'bulk',
   'footer',

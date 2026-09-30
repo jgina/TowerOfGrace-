@@ -8,6 +8,7 @@ const pick = require('../utils/pick');
 const { getPagination, buildMeta } = require('../utils/pagination');
 const { deleteImages } = require('../services/uploadService');
 const { toPublicProduct, stockStatus } = require('../services/productPresenter');
+const ledger = require('../services/stockLedger');
 
 const SORTS = {
   newest: { createdAt: -1 },
@@ -204,12 +205,15 @@ exports.createProduct = asyncHandler(async (req, res) => {
   data.slug = await uniqueSlug(req.body.slug || data.name);
   data.variants = buildVariants(req.body.variants || []);
   const product = await Product.create(data);
+  await product.populate('category', 'name slug');
+  await ledger.record(ledger.diffEntries(null, product, req.user, 'Opening stock'));
   res.status(201).json({ success: true, product });
 });
 
 exports.updateProduct = asyncHandler(async (req, res) => {
   const product = await Product.findById(req.params.id);
   if (!product) throw ApiError.notFound('Product not found');
+  const before = ledger.snapshot(product);
   const data = normaliseNumbers(pick(req.body, PRODUCT_FIELDS));
   if (data.category) await assertCategory(data.category);
 
@@ -225,6 +229,8 @@ exports.updateProduct = asyncHandler(async (req, res) => {
   }
   Object.assign(product, data);
   await product.save();
+  await product.populate('category', 'name slug');
+  await ledger.record(ledger.diffEntries(before, product, req.user, 'Stock edited on product form'));
   res.json({ success: true, product });
 });
 
@@ -247,6 +253,16 @@ exports.deleteProduct = asyncHandler(async (req, res) => {
     throw ApiError.conflict('This product is reserved by pending orders. Disable it instead, or resolve those orders first.');
   }
   const hasOrders = await Order.exists({ 'items.product': product._id });
+  await product.populate('category', 'name slug');
+  // Write off any remaining stock so ledger balances for this product end at zero.
+  const writeOff = product.variants.length
+    ? product.variants.filter((v) => v.stock).map((v) => ({ holder: v, quantity: -v.stock }))
+    : product.stock
+    ? [{ quantity: -product.stock }]
+    : [];
+  await ledger.record(
+    writeOff.map((w) => ({ ...w, product, type: 'ADJUSTMENT', balanceAfter: 0, note: 'Product deleted', user: req.user }))
+  );
   await deleteImages(product.images);
   await product.deleteOne();
   res.json({

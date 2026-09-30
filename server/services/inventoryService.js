@@ -1,5 +1,6 @@
 const { Product } = require('../models');
 const ApiError = require('../utils/ApiError');
+const ledger = require('./stockLedger');
 
 const MAX_RETRIES = 5;
 
@@ -63,11 +64,12 @@ async function reserveLine({ productId, variantId, quantity }) {
  * Atomically changes on-hand stock by `delta` (negative for losses, positive for restocks/reversals).
  * A reduction may only consume unreserved stock, so pending orders are never left without birds or eggs.
  * Returns { product, holder, before, after } for audit logging.
+ * `movement` ({ type, reference, note, user }) writes a stock-ledger line; omit it for silent rollbacks.
  */
-async function changeStock({ productId, variantId, delta }) {
+async function changeStock({ productId, variantId, delta, movement }) {
   if (!Number.isInteger(delta) || delta === 0) throw ApiError.badRequest('Quantity must be a whole number');
   for (let attempt = 0; attempt < MAX_RETRIES; attempt += 1) {
-    const product = await Product.findById(productId);
+    const product = await Product.findById(productId).populate('category', 'name slug');
     if (!product) throw ApiError.notFound('Product not found');
     const holder = findStockHolder(product, variantId);
     if (!holder) throw ApiError.notFound('Product option not found');
@@ -90,6 +92,9 @@ async function changeStock({ productId, variantId, delta }) {
     const result = await Product.updateOne(filter, update);
     if (result.modifiedCount === 1) {
       await refreshAggregates(productId);
+      if (movement) {
+        await ledger.record({ ...movement, product, holder: variantId ? holder : undefined, quantity: delta, balanceAfter: stock + delta });
+      }
       return { product, holder, before: stock, after: stock + delta };
     }
   }
@@ -115,7 +120,9 @@ async function adjustLine({ productId, variantId, quantity }, mode) {
   const result = await Product.updateOne(filter, update);
   if (result.matchedCount === 0) {
     console.warn(`Inventory ${mode} skipped for product ${productId} variant ${variantId || '-'}`);
+    return false;
   }
+  return true;
 }
 
 const toLines = (items) =>
@@ -142,12 +149,30 @@ async function reserveItems(items) {
   await refreshMany(lines);
 }
 
+const LEDGER_TYPE = { commit: 'ORDER_SALE', restock: 'ORDER_RESTOCK' };
+
 async function applyToOrder(order, mode) {
   const lines = toLines(order.items);
-  for (const line of lines) {
-    await adjustLine(line, mode);
+  const movements = [];
+  for (const [index, line] of lines.entries()) {
+    const applied = await adjustLine(line, mode);
+    // Only commit/restock change on-hand stock; releasing a reservation does not.
+    if (applied && LEDGER_TYPE[mode]) {
+      const item = order.items[index];
+      movements.push({
+        product: item.product,
+        variantId: item.variantId,
+        productName: item.name,
+        variantLabel: item.variantLabel,
+        categoryName: item.categoryName,
+        type: LEDGER_TYPE[mode],
+        quantity: mode === 'commit' ? -item.quantity : item.quantity,
+        reference: order.orderNumber,
+      });
+    }
   }
   await refreshMany(lines);
+  await ledger.record(movements);
 }
 
 // Moves an order's inventory to COMMITTED (stock physically leaves the farm).

@@ -10,6 +10,7 @@ import noilers from './noilers.jpg';
 import eggCollection from './egg poultry.jpg';
 import turkeys from './poultry turkey.jpg';
 import turkeyFlock from './Turkey 3.jpg';
+import { siteImage } from './siteImages';
 
 const img = (url, alt) => ({ url, alt });
 
@@ -23,30 +24,37 @@ export const PHOTOS = {
   turkeyFlock: img(turkeyFlock, 'A flock of turkeys in the farm yard'),
 };
 
-// Default photo for each product line, keyed by category slug.
+// A file in assets/site/ named after the slot replaces the bundled photo (see assets/siteImages.js).
+const slot = (name, photo) => siteImage(name, photo?.alt) || photo || null;
+
+// Default photo for each product line, keyed by category slug (slot: category-<slug>).
 export const CATEGORY_IMAGES = {
-  broilers: PHOTOS.broilersPen,
-  noilers: PHOTOS.noilers,
-  eggs: PHOTOS.eggCollection,
-  turkeys: PHOTOS.turkeys,
+  broilers: slot('category-broilers', PHOTOS.broilersPen),
+  noilers: slot('category-noilers', PHOTOS.noilers),
+  eggs: slot('category-eggs', PHOTOS.eggCollection),
+  turkeys: slot('category-turkeys', PHOTOS.turkeys),
 };
 
-// Default photos for page heroes and feature blocks.
+// Default photos for page heroes and feature blocks (slot name in quotes).
 export const PAGE_IMAGES = {
-  homeHero: PHOTOS.broilerHouse,
-  homeInfrastructure: PHOTOS.broilerHouse,
-  about: PHOTOS.eggCollection,
-  aboutStory: PHOTOS.eggCollection,
-  farm: PHOTOS.turkeyFlock,
-  quality: PHOTOS.broilersPen,
-  production: PHOTOS.dayOldChicks,
-  shop: PHOTOS.broilersPen,
-  bulk: PHOTOS.turkeys,
-  contact: PHOTOS.broilerHouse,
+  homeHero: slot('home-hero', PHOTOS.broilerHouse),
+  homeInfrastructure: slot('home-infrastructure', PHOTOS.broilerHouse),
+  about: slot('about-hero', PHOTOS.eggCollection),
+  aboutStory: slot('about-story', PHOTOS.eggCollection),
+  farm: slot('farm-hero', PHOTOS.turkeyFlock),
+  quality: slot('quality-hero', PHOTOS.broilersPen),
+  production: slot('production-hero', PHOTOS.dayOldChicks),
+  products: slot('products-hero', PHOTOS.broilersPen),
+  shop: slot('shop-hero', PHOTOS.broilersPen),
+  bulk: slot('bulk-hero', PHOTOS.turkeys),
+  contact: slot('contact-hero', PHOTOS.broilerHouse),
+  gallery: slot('gallery-hero', PHOTOS.turkeyFlock),
 };
 
-// Default image per production step (matched by position).
-export const PRODUCTION_STEP_IMAGES = [PHOTOS.dayOldChicks, PHOTOS.broilerHouse, PHOTOS.broilersPen, PHOTOS.eggCollection];
+// Bundled photos that suit particular cards, matched by position (the slot files still take priority).
+export const PRODUCTION_STEP_IMAGES = [PHOTOS.dayOldChicks, null, PHOTOS.broilerHouse, PHOTOS.broilersPen];
+export const FARM_SECTION_IMAGES = [PHOTOS.dayOldChicks, PHOTOS.broilerHouse, PHOTOS.eggCollection, PHOTOS.noilers];
+export const PRODUCT_LINE_IMAGES = [PHOTOS.broilersPen, PHOTOS.noilers, PHOTOS.eggCollection, PHOTOS.turkeyFlock];
 
 // Shown in the gallery until the admin uploads photos.
 export const DEFAULT_GALLERY = [
@@ -62,7 +70,8 @@ export const DEFAULT_GALLERY = [
 /** Returns the uploaded image if present, otherwise the bundled fallback. */
 export const withFallback = (image, fallback) => (image?.url ? image : fallback || null);
 
-export const categoryImage = (category) => withFallback(category?.image, CATEGORY_IMAGES[category?.slug]);
+export const categoryImage = (category) =>
+  withFallback(category?.image, CATEGORY_IMAGES[category?.slug] || siteImage(`category-${category?.slug}`, category?.name));
 
 /** Product image: its own uploads first, then its category's photo. */
 export const productImage = (product) => product?.images?.[0] || CATEGORY_IMAGES[product?.category?.slug] || null;

@@ -10,6 +10,31 @@
   object-fit: cover;
 }
 
+/* Natural mode: full width, the photo's own height — the whole image fills the space, uncropped. */
+.smart-image--natural .smart-image__img {
+  display: block;
+  height: auto;
+}
+
+/* Contain mode: the full image is always visible, never cropped. */
+.smart-image--contain .smart-image__img {
+  position: relative;
+  z-index: 1;
+  object-fit: contain;
+}
+
+/* Blurred, slightly dimmed copy of the same photo fills any empty space around it. */
+.smart-image--contain .smart-image__backdrop {
+  position: absolute;
+  inset: -12%;
+  width: 124%;
+  height: 124%;
+  object-fit: cover;
+  filter: blur(18px) saturate(1.1) brightness(0.92);
+  opacity: 0.85;
+  pointer-events: none;
+}
+
 .smart-image__placeholder {
   display: flex;
   flex-direction: column;
@@ -40,4 +65,16 @@
   letter-spacing: 0.04em;
   text-transform: uppercase;
   opacity: 0.8;
+}
+
+.smart-image__hint {
+  max-width: 100%;
+  padding: 2px 8px;
+  border-radius: var(--radius-pill);
+  background: rgba(255, 255, 255, 0.7);
+  font-size: 0.68rem;
+  color: var(--brand-green-700);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }

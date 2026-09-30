@@ -1,0 +1,30 @@
+.trip-line--move {
+  grid-template-columns: minmax(0, 1.5fr) minmax(0, 1.3fr) 100px 36px;
+}
+
+.move-remaining {
+  margin-right: auto;
+  align-self: center;
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+  color: var(--color-text-muted);
+}
+
+.move-remaining.is-over {
+  color: var(--color-danger);
+}
+
+@media (max-width: 760px) {
+  .trip-line--move {
+    grid-template-columns: minmax(0, 1fr) 90px 36px;
+  }
+
+  .trip-line--move > select:first-child,
+  .trip-line--move > :nth-child(2) {
+    grid-column: 1 / -1;
+  }
+
+  .move-remaining {
+    width: 100%;
+  }
+}

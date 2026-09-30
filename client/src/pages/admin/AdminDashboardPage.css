@@ -18,6 +18,12 @@
   color: var(--brand-amber-700);
 }
 
+.dash-alert--danger {
+  border-color: #f3c3bd;
+  background: var(--color-danger-bg);
+  color: var(--color-danger);
+}
+
 .dash-alert--info {
   border-color: #9cc4e6;
   background: var(--color-info-bg);

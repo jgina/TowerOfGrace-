@@ -1,0 +1,94 @@
+.stage-bar {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.stage-bar__track {
+  height: 10px;
+  overflow: hidden;
+  border-radius: var(--radius-pill);
+  background: var(--brand-green-100);
+}
+
+.stage-bar--compact .stage-bar__track {
+  height: 6px;
+}
+
+.stage-bar__fill {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--brand-green-500), var(--brand-green-700));
+  transition: width var(--transition-slow);
+}
+
+.stage-bar--finishing .stage-bar__fill {
+  background: linear-gradient(90deg, var(--brand-green-600), var(--brand-amber-500));
+}
+
+.stage-bar--ready .stage-bar__fill {
+  background: linear-gradient(90deg, var(--brand-amber-500), var(--brand-amber-600));
+  animation: stage-pulse 1.8s ease-in-out infinite;
+}
+
+.stage-bar--closed .stage-bar__fill {
+  background: var(--color-border-strong);
+}
+
+.stage-bar__steps {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  list-style: none;
+}
+
+.stage-bar__steps li {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.68rem;
+  font-weight: var(--weight-semibold);
+  text-align: center;
+  color: var(--color-text-subtle);
+}
+
+.stage-bar__steps li span {
+  width: 12px;
+  height: 12px;
+  border: 2px solid var(--color-border-strong);
+  border-radius: 50%;
+  background: var(--color-surface);
+}
+
+.stage-bar__steps li.is-done {
+  color: var(--brand-green-700);
+}
+
+.stage-bar__steps li.is-done span {
+  border-color: var(--brand-green-600);
+  background: var(--brand-green-600);
+}
+
+.stage-bar__steps li.is-current {
+  font-weight: var(--weight-heavy);
+  color: var(--color-text);
+}
+
+.stage-bar__steps li.is-current span {
+  border-color: var(--brand-amber-600);
+  background: var(--brand-amber-500);
+  box-shadow: 0 0 0 4px var(--brand-amber-100);
+}
+
+@keyframes stage-pulse {
+  50% {
+    opacity: 0.65;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .stage-bar--ready .stage-bar__fill {
+    animation: none;
+  }
+}

@@ -1,0 +1,92 @@
+.print-view {
+  min-height: 100vh;
+  background: #e7ece8;
+}
+
+/* Nothing on this page may trigger a web-font download (see the note in FarmStatement.css). */
+.print-view__bar,
+.print-view__bar *,
+.print-view .page-loader,
+.print-view .error-state,
+.print-view .error-state * {
+  font-family: var(--stmt-font) !important;
+}
+
+.print-view__bar {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  padding: var(--space-3) var(--space-6);
+  background: var(--brand-green-900);
+  color: #fff;
+  box-shadow: var(--shadow-md);
+}
+
+.print-view__bar .btn--ghost {
+  color: #fff;
+}
+
+.print-view__bar .btn--ghost:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.print-view__hint {
+  margin-right: auto;
+  font-size: var(--text-xs);
+  color: rgba(255, 255, 255, 0.75);
+}
+
+.print-view__hint strong {
+  color: var(--brand-amber-300);
+}
+
+.print-view__paper {
+  padding: var(--space-8) var(--space-4) var(--space-16);
+}
+
+/*
+  A4 page for statements.
+  Keep this a plain @page rule. Named pages (`@page statement` + `page: statement`) and page margin
+  boxes (@bottom-left, counter(pages)) leave web fonts stuck "loading" in current Chrome, so printing /
+  Save-as-PDF never finishes. The running footer is a fixed element instead (.stmt-running-footer),
+  which Chrome repeats on every printed page.
+*/
+@page {
+  size: A4 portrait;
+  margin: 14mm 12mm 18mm;
+}
+
+@media print {
+  body,
+  .print-view {
+    background: #fff !important;
+  }
+
+  .no-print,
+  .toast-region {
+    display: none !important;
+  }
+
+  .print-view {
+    min-height: 0;
+  }
+
+  .print-view__paper {
+    padding: 0;
+  }
+}
+
+@media (max-width: 760px) {
+  .print-view__bar {
+    flex-wrap: wrap;
+    padding: var(--space-3) var(--space-4);
+  }
+
+  .print-view__hint {
+    order: 3;
+    width: 100%;
+  }
+}

@@ -11,4 +11,9 @@ module.exports = {
   Certification: require('./Certification'),
   StockLoss: require('./StockLoss'),
   Notification: require('./Notification'),
+  MarketTrip: require('./MarketTrip'),
+  StockMovement: require('./StockMovement'),
+  FlockBatch: require('./FlockBatch'),
+  FeedItem: require('./FeedItem'),
+  FeedTransaction: require('./FeedTransaction'),
 };

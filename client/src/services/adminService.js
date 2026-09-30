@@ -47,6 +47,37 @@ export const adminService = {
   recordLoss: (payload) => api.post('/admin/stock-losses', payload).then(data),
   reverseLoss: (id, note) => api.post(`/admin/stock-losses/${id}/reverse`, { note }).then(data),
 
+  // Reports
+  statement: (params) => api.get('/admin/reports/statement', { params, timeout: 60000 }).then((r) => r.data.statement),
+
+  // Flock batches
+  listBatches: (params) => api.get('/admin/batches', { params }).then(data),
+  getBatch: (id) => api.get(`/admin/batches/${id}`).then((r) => r.data.batch),
+  createBatch: (payload) => api.post('/admin/batches', payload).then(data),
+  updateBatch: (id, payload) => api.put(`/admin/batches/${id}`, payload).then(data),
+  recordBatchMortality: (id, payload) => api.post(`/admin/batches/${id}/mortality`, payload).then(data),
+  recordBatchWeighing: (id, payload) => api.post(`/admin/batches/${id}/weighings`, payload).then(data),
+  transferBatch: (id, payload) => api.post(`/admin/batches/${id}/transfer`, payload).then(data),
+  closeBatch: (id, reason) => api.post(`/admin/batches/${id}/close`, { reason }).then(data),
+
+  // Feed store
+  listFeeds: (params) => api.get('/admin/feeds', { params }).then(data),
+  feedTransactions: (params) => api.get('/admin/feeds/transactions', { params }).then(data),
+  feedingTargets: () => api.get('/admin/feeds/targets').then(data),
+  batchFeedUsage: (batchId) => api.get(`/admin/feeds/batch/${batchId}`).then(data),
+  createFeed: (payload) => api.post('/admin/feeds', payload).then(data),
+  updateFeed: (id, payload) => api.put(`/admin/feeds/${id}`, payload).then(data),
+  recordFeedPurchase: (id, payload) => api.post(`/admin/feeds/${id}/purchases`, payload).then(data),
+  recordFeedUsage: (payload) => api.post('/admin/feeds/usage', payload).then(data),
+  adjustFeed: (id, payload) => api.post(`/admin/feeds/${id}/adjust`, payload).then(data),
+
+  // Market trips
+  listMarketTrips: (params) => api.get('/admin/market-trips', { params }).then(data),
+  getMarketTrip: (id) => api.get(`/admin/market-trips/${id}`).then((r) => r.data.trip),
+  createMarketTrip: (payload) => api.post('/admin/market-trips', payload).then(data),
+  closeMarketTrip: (id, payload) => api.post(`/admin/market-trips/${id}/close`, payload).then(data),
+  cancelMarketTrip: (id, reason) => api.post(`/admin/market-trips/${id}/cancel`, { reason }).then(data),
+
   // Orders
   listOrders: (params) => api.get('/admin/orders', { params }).then(data),
   getOrder: (id) => api.get(`/admin/orders/${id}`).then((r) => r.data.order),

@@ -5,15 +5,18 @@ import PageHero from '../components/PageHero';
 import MediaSplit from '../components/MediaSplit';
 import SmartImage from '../components/SmartImage';
 import SectionHeading from '../components/SectionHeading';
+import ImageCardGrid from '../components/ImageCardGrid';
 import CtaBand from '../components/CtaBand';
 import useFetch from '../hooks/useFetch';
 import { siteService } from '../services/siteService';
 import { useContent } from '../context/ContentContext';
-import { DEFAULT_GALLERY, PAGE_IMAGES, withFallback } from '../assets/images';
+import { DEFAULT_GALLERY, FARM_SECTION_IMAGES, PAGE_IMAGES, withFallback } from '../assets/images';
+import { slotImage, slotHint } from '../assets/siteImages';
 import './OurFarmPage.css';
 
 export default function OurFarmPage() {
   const farm = useContent('farm');
+  const { routine } = farm;
   const photos = useFetch(
     () =>
       Promise.all([siteService.getGallery({ category: 'Farm', limit: 6 }), siteService.getGallery({ category: 'Facilities', limit: 6 })]).then(
@@ -33,11 +36,34 @@ export default function OurFarmPage() {
       <section className="section section--white">
         <div className="container">
           <p className="farm-intro">{farm.intro}</p>
-          {farm.sections?.map((section, index) => (
-            <MediaSplit key={`${section.title}-${index}`} image={section.image} title={section.title} text={section.text} reverse={index % 2 === 1} />
-          ))}
+          <div className="farm-sections">
+            {farm.sections?.map((section, index) => {
+              const slot = `farm-sections-${index + 1}`;
+              return (
+                <MediaSplit
+                  key={`${section.title}-${index}`}
+                  image={slotImage(section.image, slot, FARM_SECTION_IMAGES[index])}
+                  imageLabel={section.title}
+                  imageHint={slotHint(slot)}
+                  eyebrow={`Farm area ${String(index + 1).padStart(2, '0')}`}
+                  title={section.title}
+                  text={section.text}
+                  reverse={index % 2 === 1}
+                />
+              );
+            })}
+          </div>
         </div>
       </section>
+
+      {routine?.items?.length > 0 && (
+        <section className="section section--dark">
+          <div className="container">
+            <SectionHeading light eyebrow={routine.eyebrow} title={routine.title} text={routine.text} />
+            <ImageCardGrid items={routine.items} slotPrefix="farm-routine" columns={5} ratio="1 / 1" variant="dark" numbered />
+          </div>
+        </section>
+      )}
 
       {farmPhotos.length > 0 && (
         <section className="section">

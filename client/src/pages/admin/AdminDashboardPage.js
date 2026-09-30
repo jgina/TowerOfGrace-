@@ -1,6 +1,6 @@
 import { Link, useNavigate } from 'react-router-dom';
 import {
-  Package, ShoppingBag, Users, Wallet, Clock, CheckCircle2, AlertTriangle, PackageX, Plus, Building2, Mail, ArrowRight, Skull, Egg, Receipt,
+  Package, ShoppingBag, Users, Wallet, Clock, CheckCircle2, AlertTriangle, PackageX, Plus, Building2, Mail, ArrowRight, Skull, Egg, Receipt, Truck, Store, Bird, BellRing, Wheat,
 } from 'lucide-react';
 import AdminPageHeader from '../../components/AdminPageHeader';
 import AdminStatsCard from '../../components/AdminStatsCard';
@@ -45,8 +45,18 @@ export default function AdminDashboardPage() {
         }
       />
 
-      {(stats.newBulkRequests > 0 || stats.newMessages > 0 || stats.receiptsToReview > 0) && (
+      {(stats.newBulkRequests > 0 || stats.newMessages > 0 || stats.receiptsToReview > 0 || stats.batchesReady > 0 || stats.lowFeeds?.length > 0) && (
         <div className="dash-alerts">
+          {stats.lowFeeds?.length > 0 && (
+            <Link to="/admin/feeds" className="dash-alert dash-alert--danger">
+              <Wheat aria-hidden="true" /> Low feed: {stats.lowFeeds.map((f) => `${f.name} (${f.stockBags} bags)`).join(', ')} <ArrowRight />
+            </Link>
+          )}
+          {stats.batchesReady > 0 && (
+            <Link to="/admin/batches?status=READY" className="dash-alert">
+              <Bird aria-hidden="true" /> {stats.batchesReady} flock batch{stats.batchesReady === 1 ? ' is' : 'es are'} ready for sale <ArrowRight />
+            </Link>
+          )}
           {stats.receiptsToReview > 0 && (
             <Link to="/admin/orders?awaitingReview=true" className="dash-alert dash-alert--info">
               <Receipt aria-hidden="true" /> {stats.receiptsToReview} payment receipt{stats.receiptsToReview === 1 ? '' : 's'} to confirm <ArrowRight />
@@ -75,6 +85,18 @@ export default function AdminDashboardPage() {
         <AdminStatsCard tone="amber" icon={AlertTriangle} label="Low Stock" value={stats.lowStockCount} to="/admin/inventory?status=low_stock" />
         <AdminStatsCard tone="red" icon={PackageX} label="Out of Stock" value={stats.outOfStockCount} to="/admin/inventory?status=out_of_stock" />
         <AdminStatsCard tone="red" icon={Skull} label="Birds Lost (30 days)" value={stats.birdLosses30d} to="/admin/losses" hint="Deaths, disease, culls" />
+        <AdminStatsCard
+          tone={stats.lowFeeds?.length ? 'red' : 'green'}
+          icon={Wheat}
+          label="Feed in Store"
+          value={`${stats.feedBags ?? 0} bags`}
+          to="/admin/feeds"
+          hint={stats.lowFeeds?.length ? `${stats.lowFeeds.length} feed(s) low` : 'All feeds above alert level'}
+        />
+        <AdminStatsCard icon={Bird} label="Birds Growing" value={stats.birdsGrowing} to="/admin/batches" hint="In flock batches, not yet in stock" />
+        <AdminStatsCard tone="amber" icon={BellRing} label="Batches Ready" value={stats.batchesReady} to="/admin/batches?status=READY" hint="Waiting for confirmation" />
+        <AdminStatsCard icon={Truck} label="At Market Now" value={stats.unitsAtMarket} to="/admin/market-trips?status=OUT" hint="Birds & eggs off the farm" />
+        <AdminStatsCard tone="dark" icon={Store} label="Market Sales (30 days)" value={formatCurrency(stats.marketSales30d)} to="/admin/market-trips" />
         <AdminStatsCard tone="amber" icon={Egg} label="Eggs Lost (30 days)" value={stats.eggLosses30d} to="/admin/losses" hint="Broken or spoiled packs" />
       </div>
 

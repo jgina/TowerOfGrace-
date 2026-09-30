@@ -3,22 +3,26 @@ import { ArrowRight } from 'lucide-react';
 import SEO from '../components/SEO';
 import PageHero from '../components/PageHero';
 import MediaSplit from '../components/MediaSplit';
+import SectionHeading from '../components/SectionHeading';
+import ImageCardGrid from '../components/ImageCardGrid';
+import { InfoTable } from '../components/InfoBlocks';
 import CtaBand from '../components/CtaBand';
 import { PageLoader, ErrorState } from '../components/Loader';
 import useFetch from '../hooks/useFetch';
 import { catalogService } from '../services/catalogService';
 import { useContent } from '../context/ContentContext';
-import { categoryImage } from '../assets/images';
+import { PAGE_IMAGES, categoryImage } from '../assets/images';
 import './ProductsPage.css';
 
 export default function ProductsPage() {
   const home = useContent('home');
+  const { guide, sizes } = useContent('shop');
   const { data: categories, loading, error, reload } = useFetch(() => catalogService.listCategories(), []);
 
   return (
     <>
       <SEO title="Our Products" description="Broilers, noilers, eggs and turkeys from Tower of Grace Farms." />
-      <PageHero title={home.products.title} subtitle={home.products.text} crumbs={[{ label: 'Our Products' }]} />
+      <PageHero title={home.products.title} subtitle={home.products.text} image={PAGE_IMAGES.products} crumbs={[{ label: 'Our Products' }]} />
 
       <section className="section section--white">
         <div className="container">
@@ -53,6 +57,33 @@ export default function ProductsPage() {
           )}
         </div>
       </section>
+
+      {guide?.items?.length > 0 && (
+        <section className="section">
+          <div className="container">
+            <SectionHeading eyebrow={guide.eyebrow} title={guide.title} text={guide.text} />
+            <ImageCardGrid items={guide.items} slotPrefix="shop-guide" columns={3} ratio="16 / 10" />
+          </div>
+        </section>
+      )}
+
+      {sizes?.rows?.length > 0 && (
+        <section className="section section--white">
+          <div className="container products-sizes">
+            <SectionHeading eyebrow="Portions" title={sizes.title} />
+            <InfoTable
+              caption={sizes.title}
+              columns={[
+                { key: 'size', label: 'Size' },
+                { key: 'serves', label: 'Serves' },
+                { key: 'use', label: 'Best for' },
+              ]}
+              rows={sizes.rows}
+              note={sizes.note}
+            />
+          </div>
+        </section>
+      )}
 
       <CtaBand />
     </>

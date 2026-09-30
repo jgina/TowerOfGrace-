@@ -149,6 +149,20 @@ Payments:
      `ADMIN_NOTIFY_EMAIL` to be alerted when a receipt is uploaded. Without these, the page confirmation still
      works and emails are skipped.
 
+### Market trips (Admin → Market Trips)
+
+For birds and eggs taken off the farm to sell at a market:
+
+| Step | What the admin does | Effect on stock |
+| --- | --- | --- |
+| 1. Send to market | Enter the market, date, person, vehicle and the quantity of each product option | Deducted immediately, all or nothing. Only unreserved stock can go, so online orders are never short. |
+| 2. At market | Nothing. The trip shows as **At market**, and Inventory shows an **At market** column | None. The units are already off the books. |
+| 3. Close the trip | For each line, enter **sold**, **returned** and **lost** (the three must add up to what went out), a loss reason and the sales amount | Returned units go back into stock. Lost units appear in Mortality & Losses without being deducted a second time. |
+| Cancel (if the trip didn't happen) | Cancel trip | Everything goes back into stock. |
+
+Trips are numbered `MKT-YYYY-0001`. Closed trips can't be edited, and losses linked to a trip can only be
+corrected through that trip. The dashboard shows units at market now and market sales for the last 30 days.
+
 ---
 
 ## 5. API overview

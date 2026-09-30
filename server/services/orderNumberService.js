@@ -11,4 +11,15 @@ async function nextOrderNumber(date = new Date()) {
   return `TGF-${year}-${String(counter.seq).padStart(6, '0')}`;
 }
 
-module.exports = { nextOrderNumber };
+// Sequential yearly market trip numbers such as MKT-2026-0001.
+async function nextTripNumber(date = new Date()) {
+  const year = date.getFullYear();
+  const counter = await Counter.findOneAndUpdate(
+    { _id: `market-trip-${year}` },
+    { $inc: { seq: 1 } },
+    { returnDocument: 'after', upsert: true }
+  );
+  return `MKT-${year}-${String(counter.seq).padStart(4, '0')}`;
+}
+
+module.exports = { nextOrderNumber, nextTripNumber };

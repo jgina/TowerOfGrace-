@@ -13,3 +13,7 @@
   font-size: var(--text-md);
   color: var(--brand-green-700);
 }
+
+.products-sizes {
+  max-width: 980px;
+}

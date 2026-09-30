@@ -146,6 +146,16 @@
   color: var(--color-info);
 }
 
+.notif__item--feed_low .notif__icon {
+  background: var(--color-danger-bg);
+  color: var(--color-danger);
+}
+
+.notif__item--batch_ready .notif__icon {
+  background: var(--brand-amber-100);
+  color: var(--brand-amber-700);
+}
+
 .notif__item--payment_received .notif__icon {
   background: var(--color-success-bg);
   color: var(--color-success);

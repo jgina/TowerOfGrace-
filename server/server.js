@@ -2,11 +2,13 @@ const config = require('./config');
 const connectDB = require('./config/db');
 const app = require('./app');
 const { ensureBaseData } = require('./utils/bootstrap');
+const { startBatchScheduler } = require('./services/batchScheduler');
 
 async function start() {
   config.assertConfig();
   await connectDB(config.mongoUri);
   await ensureBaseData();
+  startBatchScheduler(); // moves flock batches to "ready" and notifies admins as they reach target age
 
   const server = app.listen(config.port, () => {
     console.log(`Tower of Grace API running on port ${config.port} (${config.env})`);

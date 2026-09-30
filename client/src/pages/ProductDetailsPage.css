@@ -351,3 +351,7 @@
     padding: var(--space-4);
   }
 }
+
+.pdp-details + .pdp-notes {
+  padding-top: 0;
+}

@@ -68,3 +68,7 @@
     font-size: var(--text-base);
   }
 }
+
+.quality-vaccination {
+  max-width: 1040px;
+}

@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { Plus, Skull, Egg, ClipboardList, Undo2, HeartPulse } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { Plus, Skull, Egg, ClipboardList, Undo2, HeartPulse, Truck } from 'lucide-react';
 import AdminPageHeader from '../../components/AdminPageHeader';
 import AdminStatsCard from '../../components/AdminStatsCard';
 import DataTable from '../../components/DataTable';
@@ -224,7 +225,11 @@ export default function AdminLossesPage() {
                 header: '',
                 align: 'right',
                 render: (r) =>
-                  r.reversedAt ? (
+                  r.marketTrip ? (
+                    <Link to={`/admin/market-trips/${r.marketTrip}`} className="link losses-trip-link" title="Recorded when the market trip was closed">
+                      <Truck /> {r.tripNumber}
+                    </Link>
+                  ) : r.reversedAt ? (
                     <span className="cell-sub" title={r.reversalNote || ''}>
                       Reversed {formatDateTime(r.reversedAt)}
                     </span>

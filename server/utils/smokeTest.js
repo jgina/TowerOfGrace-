@@ -422,6 +422,317 @@ function scratchUri(uri) {
     assert.equal(after.body.summary.eggs, 0, 'reversed records are excluded from totals');
   });
 
+  await check('market trip: stock leaves on dispatch, returns balance it, losses logged once, totals reported', async () => {
+    const v0 = eggProduct.variants[0]._id;
+    const v1 = eggProduct.variants[1]._id;
+    const row = async (variantId) => {
+      const inv = await call('GET', '/admin/inventory', null, adminToken);
+      return inv.body.rows.find((x) => x.variantId === variantId);
+    };
+    assert.equal((await row(v0)).stock, 25);
+    const v1Before = (await row(v1)).stock;
+
+    // All-or-nothing dispatch: one impossible line means nothing leaves.
+    const tooMany = await call(
+      'POST',
+      '/admin/market-trips',
+      { market: 'Bodija Market', items: [{ productId: eggProduct._id, variantId: v1, quantity: 2 }, { productId: eggProduct._id, variantId: v0, quantity: 999 }] },
+      adminToken
+    );
+    assert.equal(tooMany.status, 409);
+    assert.equal((await row(v1)).stock, v1Before, 'earlier lines are rolled back');
+
+    const sent = await call(
+      'POST',
+      '/admin/market-trips',
+      { market: 'Bodija Market', responsiblePerson: 'Musa', items: [{ productId: eggProduct._id, variantId: v0, quantity: 6 }, { productId: eggProduct._id, variantId: v0, quantity: 4 }] },
+      adminToken
+    );
+    assert.equal(sent.status, 201, JSON.stringify(sent.body));
+    const trip = sent.body.trip;
+    assert.match(trip.tripNumber, /^MKT-\d{4}-0001$/);
+    assert.equal(trip.items.length, 1, 'duplicate lines are merged');
+    assert.equal(trip.items[0].quantityOut, 10);
+    const afterDispatch = await row(v0);
+    assert.equal(afterDispatch.stock, 15);
+    assert.equal(afterDispatch.atMarket, 10);
+
+    const item = trip.items[0]._id;
+    const unbalanced = await call('POST', `/admin/market-trips/${trip._id}/close`, { items: [{ itemId: item, sold: 6, returned: 3, lost: 0 }] }, adminToken);
+    assert.equal(unbalanced.status, 400, 'sold + returned + lost must equal quantity out');
+    const noReason = await call('POST', `/admin/market-trips/${trip._id}/close`, { items: [{ itemId: item, sold: 6, returned: 3, lost: 1 }] }, adminToken);
+    assert.equal(noReason.status, 400);
+
+    const closed = await call(
+      'POST',
+      `/admin/market-trips/${trip._id}/close`,
+      { items: [{ itemId: item, sold: 6, returned: 3, lost: 1, lossReason: 'BROKEN', salesAmount: 9000 }] },
+      adminToken
+    );
+    assert.equal(closed.status, 200, JSON.stringify(closed.body));
+    assert.equal(closed.body.trip.status, 'CLOSED');
+    assert.deepEqual(
+      { sold: closed.body.trip.totals.sold, returned: closed.body.trip.totals.returned, lost: closed.body.trip.totals.lost },
+      { sold: 6, returned: 3, lost: 1 }
+    );
+    const afterClose = await row(v0);
+    assert.equal(afterClose.stock, 18, '15 + 3 returned; the lost unit is not deducted twice');
+    assert.equal(afterClose.atMarket, 0);
+
+    const again = await call('POST', `/admin/market-trips/${trip._id}/close`, { items: [{ itemId: item, sold: 10 }] }, adminToken);
+    assert.equal(again.status, 409);
+
+    const losses = await call('GET', '/admin/stock-losses', null, adminToken);
+    const tripLoss = losses.body.records.find((r) => r.tripNumber === trip.tripNumber);
+    assert.ok(tripLoss, 'trip loss appears in Mortality & Losses');
+    assert.equal(tripLoss.quantity, 1);
+    const reverse = await call('POST', `/admin/stock-losses/${tripLoss._id}/reverse`, {}, adminToken);
+    assert.equal(reverse.status, 409, 'trip losses cannot be reversed separately');
+
+    const second = await call('POST', '/admin/market-trips', { market: 'Oje Market', items: [{ productId: eggProduct._id, variantId: v0, quantity: 5 }] }, adminToken);
+    assert.equal((await row(v0)).stock, 13);
+    const cancelled = await call('POST', `/admin/market-trips/${second.body.trip._id}/cancel`, { reason: 'Truck broke down' }, adminToken);
+    assert.equal(cancelled.status, 200);
+    assert.equal((await row(v0)).stock, 18, 'cancelling returns everything');
+
+    const list = await call('GET', '/admin/market-trips', null, adminToken);
+    assert.equal(list.body.summary.openTrips, 0);
+    assert.equal(list.body.summary.last30Days.sales, 9000);
+    assert.equal(list.body.summary.last30Days.sellThrough, 60);
+    const dash = await call('GET', '/admin/dashboard', null, adminToken);
+    assert.equal(dash.body.stats.marketSales30d, 9000);
+    const customer = await call('GET', '/admin/market-trips', null, customerToken);
+    assert.equal(customer.status, 403);
+  });
+
+  await check('monthly statement balances: opening + movements = closing = real stock; revenue totals match', async () => {
+    const now = new Date();
+    const r = await call('GET', `/admin/reports/statement?type=month&year=${now.getFullYear()}&month=${now.getMonth() + 1}`, null, adminToken);
+    assert.equal(r.status, 200, JSON.stringify(r.body));
+    const s = r.body.statement;
+    assert.match(s.period.statementNumber, /^TGF-STMT-\d{4}-\d{2}$/);
+
+    // Revenue: one paid online order + one closed market trip (₦9,000).
+    assert.equal(s.summary.marketRevenue, 9000);
+    assert.equal(s.summary.onlineRevenue, order.total);
+    assert.equal(s.summary.totalRevenue, order.total + 9000);
+    assert.equal(s.transactions.at(-1).balance, s.summary.totalRevenue, 'running balance ends at total revenue');
+
+    // Stock: every line must reconcile, and closing must equal the live inventory.
+    const inv = await call('GET', '/admin/inventory', null, adminToken);
+    const eggs = s.stock.rows.find((x) => x.productName === 'Test Eggs' && x.variantLabel === '12 eggs');
+    assert.ok(eggs, 'egg option appears in the stock statement');
+    assert.equal(eggs.opening, 0, 'product was created this month');
+    assert.equal(eggs.closing, inv.body.rows.find((x) => x.variantId === eggProduct.variants[0]._id).stock);
+    assert.equal(eggs.marketOut, 15);
+    assert.equal(eggs.marketReturn, 8);
+    s.stock.rows.forEach((row) => {
+      const computed = row.opening + row.added - row.onlineSales - row.marketOut + row.marketReturn - row.losses;
+      assert.equal(computed, row.closing, `${row.productName} ${row.variantLabel || ''} does not reconcile`);
+    });
+    const broiler = s.stock.rows.find((x) => x.variantLabel === '2.0–2.5 kg');
+    assert.equal(broiler.onlineSales, 2, 'committed online sale is in the ledger');
+    assert.ok(s.stock.ledgerStartedAt);
+
+    const annual = await call('GET', `/admin/reports/statement?type=year&year=${now.getFullYear()}`, null, adminToken);
+    assert.equal(annual.body.statement.monthly.length, 12);
+    assert.equal(annual.body.statement.monthly[now.getMonth()].total, s.summary.totalRevenue);
+
+    const bad = await call('GET', '/admin/reports/statement?type=month&year=2026&month=13', null, adminToken);
+    assert.equal(bad.status, 400);
+    const customer = await call('GET', `/admin/reports/statement?type=year&year=${now.getFullYear()}`, null, customerToken);
+    assert.equal(customer.status, 403);
+  });
+
+  await check('flock batch: ages from arrival, deaths do not touch stock, ready alert, confirmed transfer adds stock', async () => {
+    const broilers = categories.find((c) => c.slug === 'broilers');
+    const eggsCat = categories.find((c) => c.slug === 'eggs');
+    const heavy = heavyVariant()._id;
+    const light = product.variants.find((v) => v._id !== heavy)._id;
+    const stockOf = async (variantId) => {
+      const inv = await call('GET', '/admin/inventory', null, adminToken);
+      return inv.body.rows.find((x) => x.variantId === variantId).stock;
+    };
+    const heavyBefore = await stockOf(heavy);
+    const lightBefore = await stockOf(light);
+    const tenDaysAgo = new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+
+    const eggsBatch = await call('POST', '/admin/batches', { category: eggsCat._id, quantityPurchased: 10, targetAgeDays: 10 }, adminToken);
+    assert.equal(eggsBatch.status, 400, 'eggs are not flock batches');
+
+    const created = await call(
+      'POST',
+      '/admin/batches',
+      { category: broilers._id, quantityPurchased: 100, purchaseDate: tenDaysAgo, targetAgeDays: 42, supplier: 'Test Hatchery', unitCost: 650 },
+      adminToken
+    );
+    assert.equal(created.status, 201, JSON.stringify(created.body));
+    const b = created.body.batch;
+    assert.match(b.batchCode, /^BRL-\d{6}-\d{2}$/);
+    assert.equal(b.ageDays, 11, 'day-old on arrival + 10 days');
+    assert.equal(b.stage, 'BROODING');
+    assert.equal(b.status, 'ACTIVE');
+    assert.equal(b.live, 100);
+    assert.equal(b.totalCost, 65000);
+
+    const died = await call('POST', `/admin/batches/${b._id}/mortality`, { quantity: 3, reason: 'MORTALITY' }, adminToken);
+    assert.equal(died.body.batch.live, 97);
+    assert.equal(await stockOf(heavy), heavyBefore, 'batch deaths never change shop stock');
+    const tooMany = await call('POST', `/admin/batches/${b._id}/mortality`, { quantity: 500, reason: 'MORTALITY' }, adminToken);
+    assert.equal(tooMany.status, 400);
+    const weighed = await call('POST', `/admin/batches/${b._id}/weighings`, { avgWeightKg: 0.45, sampleSize: 20 }, adminToken);
+    assert.equal(weighed.body.batch.latestWeightKg, 0.45);
+    const early = await call('POST', `/admin/batches/${b._id}/transfer`, { allocations: [{ productId: product._id, variantId: heavy, quantity: 1 }] }, adminToken);
+    assert.equal(early.status, 409, 'birds cannot be pushed to inventory before the batch is ready');
+
+    // Bring the target forward: the batch becomes READY and the admins are notified once.
+    const edited = await call('PUT', `/admin/batches/${b._id}`, { targetAgeDays: 11 }, adminToken);
+    assert.equal(edited.body.batch.status, 'READY');
+    await call('GET', '/admin/batches', null, adminToken);
+    const feed = await call('GET', '/admin/notifications?limit=50', null, adminToken);
+    const alerts = feed.body.notifications.filter((n) => n.type === 'BATCH_READY' && n.title.includes(b.batchCode));
+    assert.equal(alerts.length, 1, 'exactly one ready notification');
+    assert.equal(alerts[0].link, `/admin/batches/${b._id}`);
+
+    const over = await call('POST', `/admin/batches/${b._id}/transfer`, { allocations: [{ productId: product._id, variantId: heavy, quantity: 98 }] }, adminToken);
+    assert.equal(over.status, 400);
+    const first = await call(
+      'POST',
+      `/admin/batches/${b._id}/transfer`,
+      { allocations: [{ productId: product._id, variantId: heavy, quantity: 50 }, { productId: product._id, variantId: light, quantity: 20 }] },
+      adminToken
+    );
+    assert.equal(first.status, 200, JSON.stringify(first.body));
+    assert.equal(first.body.batch.live, 27);
+    assert.equal(first.body.batch.status, 'READY', 'partial transfer keeps the batch open');
+    assert.equal(await stockOf(heavy), heavyBefore + 50);
+    assert.equal(await stockOf(light), lightBefore + 20);
+
+    const rest = await call('POST', `/admin/batches/${b._id}/transfer`, { allocations: [{ productId: product._id, variantId: heavy, quantity: 27 }] }, adminToken);
+    assert.equal(rest.body.batch.status, 'COMPLETED');
+    assert.equal(rest.body.batch.stage, 'IN_STOCK');
+    const locked = await call('POST', `/admin/batches/${b._id}/mortality`, { quantity: 1, reason: 'MORTALITY' }, adminToken);
+    assert.equal(locked.status, 409);
+
+    const now = new Date();
+    const statement = await call('GET', `/admin/reports/statement?type=month&year=${now.getFullYear()}&month=${now.getMonth() + 1}`, null, adminToken);
+    const heavyRow = statement.body.statement.stock.rows.find((x) => x.variantLabel === '2.0–2.5 kg');
+    assert.equal(heavyRow.closing, heavyBefore + 77, 'batch transfers flow into the stock statement');
+    statement.body.statement.stock.rows.forEach((row) => {
+      assert.equal(row.opening + row.added - row.onlineSales - row.marketOut + row.marketReturn - row.losses, row.closing);
+    });
+    const customer = await call('GET', '/admin/batches', null, customerToken);
+    assert.equal(customer.status, 403);
+  });
+
+  await check('feed store: purchases in, daily feeding out (per batch), never below zero, one low-feed alert per drop', async () => {
+    await call('PUT', '/admin/content/settings', { data: { feedAlertEmails: 'boss@example.com' } }, adminToken);
+    const created = await call('POST', '/admin/feeds', { name: 'Broiler Starter', brand: 'Test Mills', feedType: 'STARTER', bagSizeKg: 25, lowStockBags: 10, openingBags: 15 }, adminToken);
+    assert.equal(created.status, 201, JSON.stringify(created.body));
+    const feed = created.body.feed;
+    assert.equal(feed.stockBags, 15);
+    const duplicate = await call('POST', '/admin/feeds', { name: 'broiler starter', brand: 'test mills' }, adminToken);
+    assert.equal(duplicate.status, 409, 'the same feed cannot be added twice');
+
+    const bought = await call('POST', `/admin/feeds/${feed._id}/purchases`, { bags: 5, costPerBag: 12000, supplier: 'Agro Depot' }, adminToken);
+    assert.equal(bought.body.feed.stockBags, 20);
+
+    const broilers = categories.find((c) => c.slug === 'broilers');
+    const batch = (await call('POST', '/admin/batches', { category: broilers._id, quantityPurchased: 200, targetAgeDays: 42 }, adminToken)).body.batch;
+    const fed = await call('POST', '/admin/feeds/usage', { lines: [{ feedId: feed._id, bags: 6, batchId: batch._id }, { feedId: feed._id, bags: 2.5 }] }, adminToken);
+    assert.equal(fed.status, 201, JSON.stringify(fed.body));
+
+    const feedsNow = async () => (await call('GET', '/admin/feeds', null, adminToken)).body;
+    assert.equal((await feedsNow()).feeds.find((f) => f._id === feed._id).stockBags, 11.5);
+    const alertsFor = async () =>
+      (await call('GET', '/admin/notifications?limit=50', null, adminToken)).body.notifications.filter((n) => n.type === 'FEED_LOW' && n.title.includes('Broiler Starter'));
+    assert.equal((await alertsFor()).length, 0, 'no alert above 10 bags');
+
+    await call('POST', '/admin/feeds/usage', { lines: [{ feedId: feed._id, bags: 2 }] }, adminToken);
+    assert.equal((await alertsFor()).length, 1, 'alert when stock reaches 10 bags or fewer');
+    await call('POST', '/admin/feeds/usage', { lines: [{ feedId: feed._id, bags: 1 }] }, adminToken);
+    assert.equal((await alertsFor()).length, 1, 'no duplicate alert while still low');
+
+    const over = await call('POST', '/admin/feeds/usage', { lines: [{ feedId: feed._id, bags: 1 }, { feedId: feed._id, bags: 999 }] }, adminToken);
+    assert.equal(over.status, 409, 'cannot feed more than is in store');
+    let summary = await feedsNow();
+    assert.equal(summary.feeds.find((f) => f._id === feed._id).stockBags, 8.5, 'a rejected multi-line entry deducts nothing');
+    assert.equal(summary.summary.lowFeeds, 1);
+
+    const noReason = await call('POST', `/admin/feeds/${feed._id}/adjust`, { countedBags: 30 }, adminToken);
+    assert.equal(noReason.status, 400);
+    const counted = await call('POST', `/admin/feeds/${feed._id}/adjust`, { countedBags: 30, note: 'Stock count' }, adminToken);
+    assert.equal(counted.body.feed.stockBags, 30);
+    await call('POST', '/admin/feeds/usage', { lines: [{ feedId: feed._id, bags: 20 }] }, adminToken);
+    assert.equal((await alertsFor()).length, 2, 'the alert re-arms after restocking');
+
+    const perBatch = await call('GET', `/admin/feeds/batch/${batch._id}`, null, adminToken);
+    assert.equal(perBatch.body.totalBags, 6);
+    const ledger = await call('GET', `/admin/feeds/transactions?feed=${feed._id}`, null, adminToken);
+    assert.equal(ledger.body.transactions[0].balanceAfter, 10, 'latest ledger balance matches stock');
+    assert.deepEqual(ledger.body.transactions.map((t) => t.type).reverse(), ['OPENING', 'PURCHASE', 'USAGE', 'USAGE', 'USAGE', 'USAGE', 'ADJUSTMENT', 'USAGE']);
+
+    summary = await feedsNow();
+    assert.equal(summary.summary.totalBags, 10);
+    assert.equal(summary.summary.spent30Days, 60000);
+    const dash = await call('GET', '/admin/dashboard', null, adminToken);
+    assert.equal(dash.body.stats.feedBags, 10);
+    assert.equal((await call('GET', '/admin/feeds', null, customerToken)).status, 403);
+  });
+
+  await check('feeding covers every bird: whole farm, growing and ready batches, birds in stock, named pens', async () => {
+    const feed = (await call('POST', '/admin/feeds', { name: 'Layer Mash', feedType: 'LAYER', lowStockBags: 2, openingBags: 40 }, adminToken)).body.feed;
+    const broilers = categories.find((c) => c.slug === 'broilers');
+    const fiftyDaysAgo = new Date(Date.now() - 50 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+    const ready = (await call('POST', '/admin/batches', { category: broilers._id, quantityPurchased: 60, purchaseDate: fiftyDaysAgo, targetAgeDays: 42 }, adminToken)).body.batch;
+    assert.equal(ready.status, 'READY');
+
+    const targets = (await call('GET', '/admin/feeds/targets', null, adminToken)).body;
+    assert.ok(targets.batches.some((b) => b._id === ready._id && b.status === 'READY'), 'ready-for-sale batches can be fed');
+    assert.ok(targets.products.length > 0, 'birds in the main stock can be fed');
+    assert.ok(targets.products.every((p) => !/egg/i.test(p.name)), 'egg products are not feeding targets');
+    const stockBird = targets.products[0];
+
+    const fed = await call(
+      'POST',
+      '/admin/feeds/usage',
+      {
+        lines: [
+          { feedId: feed._id, bags: 4, fedTo: 'FARM' },
+          { feedId: feed._id, bags: 3, fedTo: 'BATCH', batchId: ready._id },
+          { feedId: feed._id, bags: 2, fedTo: 'STOCK', productId: stockBird._id },
+          { feedId: feed._id, bags: 1, fedTo: 'STOCK' },
+          { feedId: feed._id, bags: 1.5, fedTo: 'GROUP', groupName: 'Layer house 2' },
+        ],
+      },
+      adminToken
+    );
+    assert.equal(fed.status, 201, JSON.stringify(fed.body));
+
+    const noName = await call('POST', '/admin/feeds/usage', { lines: [{ feedId: feed._id, bags: 1, fedTo: 'GROUP' }] }, adminToken);
+    assert.equal(noName.status, 400, 'a pen / group needs a name');
+    const noBatch = await call('POST', '/admin/feeds/usage', { lines: [{ feedId: feed._id, bags: 1, fedTo: 'BATCH' }] }, adminToken);
+    assert.equal(noBatch.status, 400, 'a batch line needs the batch');
+    const completed = (await call('GET', '/admin/batches?status=COMPLETED', null, adminToken)).body.batches[0];
+    if (completed) {
+      const gone = await call('POST', '/admin/feeds/usage', { lines: [{ feedId: feed._id, bags: 1, fedTo: 'BATCH', batchId: completed._id }] }, adminToken);
+      assert.equal(gone.status, 400, 'a batch already moved to stock is fed as stock');
+    }
+
+    const ledger = (await call('GET', `/admin/feeds/transactions?feed=${feed._id}&type=USAGE`, null, adminToken)).body.transactions;
+    assert.deepEqual(ledger.map((t) => t.fedTo).sort(), ['BATCH', 'FARM', 'GROUP', 'STOCK', 'STOCK']);
+    assert.equal(ledger.find((t) => t.fedTo === 'BATCH').batchCode, ready.batchCode);
+    assert.equal(ledger.find((t) => t.fedTo === 'STOCK' && t.product).productName, stockBird.name);
+    assert.equal(ledger.find((t) => t.fedTo === 'GROUP').groupName, 'Layer house 2');
+    const stockOnly = (await call('GET', `/admin/feeds/transactions?feed=${feed._id}&fedTo=STOCK`, null, adminToken)).body.transactions;
+    assert.equal(stockOnly.length, 2);
+
+    const store = (await call('GET', '/admin/feeds', null, adminToken)).body;
+    assert.equal(store.feeds.find((f) => f._id === feed._id).stockBags, 28.5);
+    assert.ok(store.summary.fedTo30Days.STOCK >= 3 && store.summary.fedTo30Days.GROUP >= 1.5);
+    assert.equal((await call('GET', `/admin/feeds/batch/${ready._id}`, null, adminToken)).body.totalBags, 3, 'a ready batch still tracks its own feed');
+  });
+
   await check('bank transfer details are published for checkout', async () => {
     const cfg = await call('GET', '/payments/config');
     assert.equal(cfg.body.bankTransfer.accountNumber, '3011906808');

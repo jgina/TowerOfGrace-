@@ -1,8 +1,10 @@
-import { Home, Droplets, Stethoscope, PackageCheck, Award, CalendarCheck } from 'lucide-react';
+import { Award, CalendarCheck, DoorClosed, Footprints, Shirt, Repeat, SprayCan, ShieldAlert, Bug, Trash2 } from 'lucide-react';
 import SEO from '../components/SEO';
 import PageHero from '../components/PageHero';
 import SectionHeading from '../components/SectionHeading';
 import FeatureGrid from '../components/FeatureGrid';
+import ImageCardGrid from '../components/ImageCardGrid';
+import { InfoTable } from '../components/InfoBlocks';
 import SmartImage from '../components/SmartImage';
 import CtaBand from '../components/CtaBand';
 import useFetch from '../hooks/useFetch';
@@ -12,8 +14,11 @@ import { formatDate } from '../utils/format';
 import { PAGE_IMAGES, withFallback } from '../assets/images';
 import './QualityPage.css';
 
+const BIOSECURITY_ICONS = [DoorClosed, Footprints, Shirt, Repeat, SprayCan, ShieldAlert, Bug, Trash2];
+
 export default function QualityPage() {
   const quality = useContent('quality');
+  const { biosecurity, vaccination, foodSafety } = quality;
   // Only certifications an admin has uploaded and marked public/active are ever shown.
   const certs = useFetch(() => siteService.getCertifications(), []);
 
@@ -25,9 +30,45 @@ export default function QualityPage() {
       <section className="section section--white">
         <div className="container">
           <p className="quality-intro">{quality.intro}</p>
-          <FeatureGrid items={quality.standards} icons={[Home, Droplets, Stethoscope, PackageCheck]} columns={Math.min(quality.standards?.length || 1, 4)} />
+          <ImageCardGrid items={quality.standards} slotPrefix="quality-standards" columns={Math.min(quality.standards?.length || 1, 4)} ratio="4 / 3" />
         </div>
       </section>
+
+      {biosecurity?.items?.length > 0 && (
+        <section className="section section--dark">
+          <div className="container">
+            <SectionHeading light eyebrow={biosecurity.eyebrow} title={biosecurity.title} text={biosecurity.text} />
+            <FeatureGrid items={biosecurity.items} icons={BIOSECURITY_ICONS} columns={4} variant="dark" />
+          </div>
+        </section>
+      )}
+
+      {vaccination?.rows?.length > 0 && (
+        <section className="section">
+          <div className="container quality-vaccination">
+            <SectionHeading eyebrow={vaccination.eyebrow} title={vaccination.title} text={vaccination.text} />
+            <InfoTable
+              caption={vaccination.title}
+              columns={[
+                { key: 'age', label: 'Age' },
+                { key: 'vaccine', label: 'Vaccine / disease' },
+                { key: 'method', label: 'How it is given' },
+              ]}
+              rows={vaccination.rows}
+              note={vaccination.note}
+            />
+          </div>
+        </section>
+      )}
+
+      {foodSafety?.items?.length > 0 && (
+        <section className="section section--white" id="food-safety">
+          <div className="container">
+            <SectionHeading eyebrow={foodSafety.eyebrow} title={foodSafety.title} text={foodSafety.text} />
+            <ImageCardGrid items={foodSafety.items} slotPrefix="quality-foodsafety" columns={3} ratio="16 / 10" />
+          </div>
+        </section>
+      )}
 
       {certs.data?.length > 0 && (
         <section className="section">

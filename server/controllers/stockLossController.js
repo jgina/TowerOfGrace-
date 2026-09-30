@@ -92,7 +92,12 @@ exports.createLoss = asyncHandler(async (req, res) => {
   const date = occurredOn ? new Date(occurredOn) : new Date();
   if (date > new Date(Date.now() + 60 * 1000)) throw ApiError.badRequest('The date of the loss cannot be in the future');
 
-  const change = await inventory.changeStock({ productId: product._id, variantId: variantId || undefined, delta: -qty });
+  const change = await inventory.changeStock({
+    productId: product._id,
+    variantId: variantId || undefined,
+    delta: -qty,
+    movement: { type: 'LOSS', note: `${reason}${notes ? ` — ${notes}` : ''}`, user: req.user, at: date },
+  });
 
   const record = await StockLoss.create({
     product: product._id,
@@ -119,6 +124,9 @@ exports.reverseLoss = asyncHandler(async (req, res) => {
   const record = await StockLoss.findById(req.params.id);
   if (!record) throw ApiError.notFound('Loss record not found');
   if (record.reversedAt) throw ApiError.conflict('This record has already been reversed');
+  if (record.marketTrip) {
+    throw ApiError.conflict(`This loss belongs to market trip ${record.tripNumber}. Its stock was deducted when the trip left the farm.`);
+  }
   if (!(await Product.exists({ _id: record.product }))) {
     throw ApiError.conflict('The product no longer exists, so its stock cannot be restored');
   }
@@ -132,7 +140,12 @@ exports.reverseLoss = asyncHandler(async (req, res) => {
   if (!claimed) throw ApiError.conflict('This record has already been reversed');
 
   try {
-    await inventory.changeStock({ productId: record.product, variantId: record.variantId, delta: record.quantity });
+    await inventory.changeStock({
+      productId: record.product,
+      variantId: record.variantId,
+      delta: record.quantity,
+      movement: { type: 'LOSS_REVERSAL', note: req.body.note || 'Loss entry reversed', user: req.user },
+    });
   } catch (error) {
     await StockLoss.updateOne({ _id: record._id }, { $unset: { reversedAt: 1, reversedBy: 1, reversedByName: 1, reversalNote: 1 } });
     throw error;

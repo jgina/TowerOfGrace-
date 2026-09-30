@@ -39,6 +39,13 @@ const AdminProductFormPage = lazy(() => import('../pages/admin/AdminProductFormP
 const AdminCategoriesPage = lazy(() => import('../pages/admin/AdminCategoriesPage'));
 const AdminInventoryPage = lazy(() => import('../pages/admin/AdminInventoryPage'));
 const AdminLossesPage = lazy(() => import('../pages/admin/AdminLossesPage'));
+const AdminBatchesPage = lazy(() => import('../pages/admin/AdminBatchesPage'));
+const AdminFeedsPage = lazy(() => import('../pages/admin/AdminFeedsPage'));
+const AdminBatchDetailsPage = lazy(() => import('../pages/admin/AdminBatchDetailsPage'));
+const AdminReportsPage = lazy(() => import('../pages/admin/AdminReportsPage'));
+const AdminStatementPrintPage = lazy(() => import('../pages/admin/AdminStatementPrintPage'));
+const AdminMarketTripsPage = lazy(() => import('../pages/admin/AdminMarketTripsPage'));
+const AdminMarketTripDetailsPage = lazy(() => import('../pages/admin/AdminMarketTripDetailsPage'));
 const AdminOrdersPage = lazy(() => import('../pages/admin/AdminOrdersPage'));
 const AdminOrderDetailsPage = lazy(() => import('../pages/admin/AdminOrderDetailsPage'));
 const AdminCustomersPage = lazy(() => import('../pages/admin/AdminCustomersPage'));
@@ -89,6 +96,8 @@ export default function AppRoutes() {
 
         <Route path="admin/login" element={<AdminLoginPage />} />
         <Route path="admin" element={<AdminRoute />}>
+          {/* Standalone A4 print view: admin-only, but outside the admin layout. */}
+          <Route path="reports/print" element={<AdminStatementPrintPage />} />
           <Route element={<AdminLayout />}>
             <Route index element={<AdminDashboardPage />} />
             <Route path="products" element={<AdminProductsPage />} />
@@ -97,6 +106,12 @@ export default function AppRoutes() {
             <Route path="categories" element={<AdminCategoriesPage />} />
             <Route path="inventory" element={<AdminInventoryPage />} />
             <Route path="losses" element={<AdminLossesPage />} />
+            <Route path="batches" element={<AdminBatchesPage />} />
+            <Route path="feeds" element={<AdminFeedsPage />} />
+            <Route path="batches/:id" element={<AdminBatchDetailsPage />} />
+            <Route path="reports" element={<AdminReportsPage />} />
+            <Route path="market-trips" element={<AdminMarketTripsPage />} />
+            <Route path="market-trips/:id" element={<AdminMarketTripDetailsPage />} />
             <Route path="orders" element={<AdminOrdersPage />} />
             <Route path="orders/:id" element={<AdminOrderDetailsPage />} />
             <Route path="customers" element={<AdminCustomersPage />} />

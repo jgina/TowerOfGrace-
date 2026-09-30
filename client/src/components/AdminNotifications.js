@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Bell, Receipt, BellRing, ShoppingBag, BadgeCheck, Building2, Mail, CheckCheck } from 'lucide-react';
+import { Bell, Receipt, BellRing, ShoppingBag, BadgeCheck, Building2, Mail, CheckCheck, Bird, Wheat } from 'lucide-react';
 import { adminService } from '../services/adminService';
 import { useToast } from '../context/ToastContext';
 import { timeAgo } from '../utils/format';
@@ -14,9 +14,11 @@ const ICONS = {
   PAYMENT_RECEIVED: BadgeCheck,
   BULK_REQUEST: Building2,
   CONTACT_MESSAGE: Mail,
+  BATCH_READY: Bird,
+  FEED_LOW: Wheat,
 };
-// Payment-related alerts are the ones that need action, so they also pop up as toasts.
-const URGENT = ['RECEIPT_UPLOADED', 'TRANSFER_NOTICE', 'PAYMENT_RECEIVED'];
+// Alerts that need action also pop up as toasts.
+const URGENT = ['RECEIPT_UPLOADED', 'TRANSFER_NOTICE', 'PAYMENT_RECEIVED', 'BATCH_READY', 'FEED_LOW'];
 
 // Short two-tone chime via Web Audio (no audio file needed). Browsers only allow it after the admin has interacted with the page.
 function chime() {

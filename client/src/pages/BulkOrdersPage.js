@@ -1,10 +1,13 @@
 import { useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Hotel, UtensilsCrossed, Store, Truck, ShoppingCart, ChefHat, Briefcase, Send, CalendarClock, Scale, UserCheck } from 'lucide-react';
+import { Hotel, UtensilsCrossed, Store, Truck, ShoppingCart, ChefHat, Briefcase, Send, CalendarClock, Scale, UserCheck, CalendarCheck, ClipboardList, FileText } from 'lucide-react';
 import SEO from '../components/SEO';
 import PageHero from '../components/PageHero';
 import FormField from '../components/FormField';
 import FeatureGrid from '../components/FeatureGrid';
+import SectionHeading from '../components/SectionHeading';
+import ImageCardGrid from '../components/ImageCardGrid';
+import { ProcessSteps } from '../components/InfoBlocks';
 import useFetch from '../hooks/useFetch';
 import { catalogService } from '../services/catalogService';
 import { siteService } from '../services/siteService';
@@ -103,7 +106,7 @@ export default function BulkOrdersPage() {
         <div className="container bulk-layout">
           <div className="bulk-info">
             <p className="bulk-info__intro">{bulk.intro}</p>
-            <FeatureGrid items={bulk.benefits} icons={[CalendarClock, Scale, UserCheck]} columns={1} />
+            <FeatureGrid items={bulk.benefits} icons={[CalendarClock, Scale, UserCheck, CalendarCheck, ClipboardList, FileText]} columns={1} />
           </div>
 
           <form id="bulk-form" ref={formRef} className="card bulk-form" onSubmit={submit} noValidate>
@@ -159,6 +162,33 @@ export default function BulkOrdersPage() {
           </form>
         </div>
       </section>
+
+      {bulk.process?.items?.length > 0 && (
+        <section className="section section--dark">
+          <div className="container">
+            <SectionHeading light eyebrow={bulk.process.eyebrow} title={bulk.process.title} />
+            <ProcessSteps items={bulk.process.items} variant="dark" />
+          </div>
+        </section>
+      )}
+
+      {bulk.buyers?.items?.length > 0 && (
+        <section className="section section--white">
+          <div className="container">
+            <SectionHeading
+              eyebrow={bulk.buyers.eyebrow}
+              title={bulk.buyers.title}
+              text={bulk.buyers.text}
+              action={
+                <a href="#bulk-form" className="btn btn--accent">
+                  Request Supply
+                </a>
+              }
+            />
+            <ImageCardGrid items={bulk.buyers.items} slotPrefix="bulk-buyers" columns={3} ratio="16 / 10" />
+          </div>
+        </section>
+      )}
     </>
   );
 }

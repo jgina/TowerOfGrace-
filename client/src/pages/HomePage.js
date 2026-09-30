@@ -5,11 +5,12 @@ import SectionHeading from '../components/SectionHeading';
 import SmartImage, { cloudinaryUrl } from '../components/SmartImage';
 import ProductCard, { ProductCardSkeleton } from '../components/ProductCard';
 import FeatureGrid from '../components/FeatureGrid';
+import ImageCardGrid from '../components/ImageCardGrid';
 import { useContent } from '../context/ContentContext';
 import useFetch from '../hooks/useFetch';
 import { catalogService } from '../services/catalogService';
 import { siteService } from '../services/siteService';
-import { DEFAULT_GALLERY, PAGE_IMAGES, categoryImage, withFallback } from '../assets/images';
+import { DEFAULT_GALLERY, PAGE_IMAGES, PRODUCTION_STEP_IMAGES, categoryImage, withFallback } from '../assets/images';
 import './HomePage.css';
 
 const wordCount = (text = '') => text.split(/\s+/).filter(Boolean).length;
@@ -45,7 +46,7 @@ const PILLAR_ICONS = [HeartPulse, ShieldCheck, Truck, Handshake];
 export default function HomePage() {
   const home = useContent('home');
   const orgJsonLd = useOrganizationJsonLd();
-  const { hero, pillars, products, infrastructure, bulk, retail, gallery } = home;
+  const { hero, pillars, products, journey, infrastructure, audience, knowhow, bulk, retail, gallery } = home;
 
   const categories = useFetch(() => catalogService.listCategories(), []);
   const featured = useFetch(() => catalogService.listProducts({ featured: 'true', limit: 4 }).then((r) => r.products), []);
@@ -164,6 +165,26 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* ---------- Farm to table ---------- */}
+      {journey?.items?.length > 0 && (
+        <section className="section section--dark">
+          <div className="container">
+            <SectionHeading
+              light
+              eyebrow={journey.eyebrow}
+              title={journey.title}
+              text={journey.text}
+              action={
+                <Link to="/how-we-produce" className="btn btn--accent">
+                  How We Produce <ArrowRight />
+                </Link>
+              }
+            />
+            <ImageCardGrid items={journey.items} slotPrefix="home-journey" bundled={PRODUCTION_STEP_IMAGES} columns={4} variant="dark" numbered />
+          </div>
+        </section>
+      )}
+
       {/* ---------- Infrastructure ---------- */}
       <section className="section section--white">
         <div className="container infra">
@@ -201,8 +222,18 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* ---------- Who we serve ---------- */}
+      {audience?.items?.length > 0 && (
+        <section className="section">
+          <div className="container">
+            <SectionHeading eyebrow={audience.eyebrow} title={audience.title} text={audience.text} />
+            <ImageCardGrid items={audience.items} slotPrefix="home-audience" columns={3} ratio="16 / 10" />
+          </div>
+        </section>
+      )}
+
       {/* ---------- Retail + bulk split ---------- */}
-      <section className="section">
+      <section className="section section--white">
         <div className="container split-cta">
           <div className="split-cta__card">
             <ShoppingBasket className="split-cta__icon" aria-hidden="true" />
@@ -224,6 +255,16 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+
+      {/* ---------- Good to know ---------- */}
+      {knowhow?.items?.length > 0 && (
+        <section className="section">
+          <div className="container">
+            <SectionHeading eyebrow={knowhow.eyebrow} title={knowhow.title} text={knowhow.text} />
+            <ImageCardGrid items={knowhow.items} slotPrefix="home-knowhow" columns={3} ratio="16 / 10" />
+          </div>
+        </section>
+      )}
 
       {/* ---------- Gallery ---------- */}
       {galleryPhotos.length > 0 && (

@@ -1,7 +1,7 @@
 import { Suspense, useEffect, useState } from 'react';
 import { Link, NavLink, Outlet, useLocation } from 'react-router-dom';
 import {
-  LayoutDashboard, Package, Tags, Warehouse, Skull, ShoppingBag, Users, Building2, Mail, FileText, Images, Award, Settings,
+  LayoutDashboard, FileSpreadsheet, Bird, Wheat, Package, Tags, Warehouse, Skull, Truck, ShoppingBag, Users, Building2, Mail, FileText, Images, Award, Settings,
   Menu, X, ExternalLink, LogOut,
 } from 'lucide-react';
 import Logo from '../components/Logo';
@@ -12,13 +12,22 @@ import { useAuth } from '../context/AuthContext';
 import './AdminLayout.css';
 
 const NAV = [
-  { group: 'Overview', items: [{ to: '/admin', label: 'Dashboard', icon: LayoutDashboard, end: true }] },
+  {
+    group: 'Overview',
+    items: [
+      { to: '/admin', label: 'Dashboard', icon: LayoutDashboard, end: true },
+      { to: '/admin/reports', label: 'Statements & Reports', icon: FileSpreadsheet },
+    ],
+  },
   {
     group: 'Catalogue',
     items: [
       { to: '/admin/products', label: 'Products', icon: Package },
       { to: '/admin/categories', label: 'Categories', icon: Tags },
+      { to: '/admin/batches', label: 'Flock Batches', icon: Bird },
+      { to: '/admin/feeds', label: 'Feed Store', icon: Wheat },
       { to: '/admin/inventory', label: 'Inventory', icon: Warehouse },
+      { to: '/admin/market-trips', label: 'Market Trips', icon: Truck },
       { to: '/admin/losses', label: 'Mortality & Losses', icon: Skull },
     ],
   },

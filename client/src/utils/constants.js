@@ -77,6 +77,50 @@ export const LOSS_REASONS = {
   OTHER: { label: 'Other', for: 'any' },
 };
 
+export const TRIP_STATUS = {
+  OUT: { label: 'At market', tone: 'accent' },
+  CLOSED: { label: 'Closed', tone: 'success' },
+  CANCELLED: { label: 'Cancelled', tone: 'neutral' },
+};
+
+// Flock batch stages, in order. Stages change automatically with the batch's age.
+export const BATCH_STAGES = {
+  BROODING: { label: 'Brooding', tone: 'info', step: 1 },
+  GROWING: { label: 'Growing', tone: 'success', step: 2 },
+  FINISHING: { label: 'Finishing', tone: 'accent', step: 3 },
+  READY: { label: 'Ready for sale', tone: 'warning', step: 4 },
+  IN_STOCK: { label: 'Moved to stock', tone: 'dark', step: 5 },
+  CLOSED: { label: 'Closed', tone: 'neutral', step: 0 },
+};
+
+// Typical selling ages, used only to pre-fill the form — the admin always sets the real target.
+export const TYPICAL_TARGET_DAYS = { broilers: 42, noilers: 84, turkeys: 140 };
+
+export const FEED_TYPES = {
+  STARTER: 'Starter',
+  GROWER: 'Grower',
+  FINISHER: 'Finisher',
+  LAYER: 'Layer',
+  CONCENTRATE: 'Concentrate',
+  SUPPLEMENT: 'Supplement',
+  OTHER: 'Other',
+};
+
+export const FEED_TX = {
+  OPENING: { label: 'Opening stock', tone: 'neutral' },
+  PURCHASE: { label: 'Purchase', tone: 'success' },
+  USAGE: { label: 'Fed', tone: 'accent' },
+  ADJUSTMENT: { label: 'Stock count', tone: 'info' },
+};
+
+// Who a feeding entry went to
+export const FED_TO = {
+  FARM: 'Whole farm',
+  BATCH: 'Flock batch',
+  STOCK: 'Birds in stock',
+  GROUP: 'Pen / group',
+};
+
 export const lossReasonsFor = (categorySlug) => {
   const kind = categorySlug === 'eggs' ? 'eggs' : 'birds';
   return Object.entries(LOSS_REASONS).filter(([, r]) => r.for === 'any' || r.for === kind);

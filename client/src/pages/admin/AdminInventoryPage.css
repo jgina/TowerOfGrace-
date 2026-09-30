@@ -12,6 +12,11 @@
   color: var(--brand-amber-700);
 }
 
+.inventory-market {
+  color: var(--brand-amber-700);
+  font-weight: var(--weight-heavy);
+}
+
 .inventory-reserved {
   color: var(--color-info);
 }

@@ -32,6 +32,10 @@ const stockLossSchema = new mongoose.Schema(
     notes: { type: String, trim: true, maxlength: 1000 },
     stockBefore: Number,
     stockAfter: Number,
+    // Set when the loss happened during a market trip. Stock was already deducted when the trip left,
+    // so these records do not change stock and can only be corrected through the trip itself.
+    marketTrip: { type: mongoose.Schema.Types.ObjectId, ref: 'MarketTrip' },
+    tripNumber: String,
     recordedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
     recordedByName: String,
     reversedAt: Date,

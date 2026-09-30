@@ -11,27 +11,39 @@ export function cloudinaryUrl(url, width) {
 /**
  * Image with a branded placeholder. Placeholders appear wherever the admin has not yet uploaded
  * a real Tower of Grace photo, so no stock imagery misrepresents the farm.
+ *
+ * fit="cover" (default) fills the frame and may crop edges.
+ * fit="contain" always shows the whole image; the spare space is filled with a soft blurred copy of it,
+ * so portrait, landscape and square photos all sit neatly in the same card shape.
+ * fit="natural" shows the whole image at full width and its own height (no crop, no filler).
+ * `ratio` then only sizes the placeholder shown before a photo exists.
  */
-export default function SmartImage({ src, alt = '', width, ratio, className = '', label, eager = false }) {
+export default function SmartImage({ src, alt = '', width, ratio, className = '', label, hint, eager = false, fit = 'cover' }) {
   const [failed, setFailed] = useState(false);
-  const style = ratio ? { aspectRatio: ratio } : undefined;
   const showPlaceholder = !src || failed;
+  const style = ratio && (fit !== 'natural' || showPlaceholder) ? { aspectRatio: ratio } : undefined;
+  const url = cloudinaryUrl(src, width);
 
   return (
-    <div className={`smart-image ${className}`} style={style}>
+    <div className={`smart-image smart-image--${fit} ${className}`} style={style}>
       {showPlaceholder ? (
         <div className="smart-image__placeholder" role="img" aria-label={alt || label || 'Image coming soon'}>
           <ImageIcon aria-hidden="true" />
           {label && <span>{label}</span>}
+          {hint && <code className="smart-image__hint">{hint}</code>}
         </div>
       ) : (
-        <img
-          src={cloudinaryUrl(src, width)}
-          alt={alt}
-          loading={eager ? 'eager' : 'lazy'}
-          decoding="async"
-          onError={() => setFailed(true)}
-        />
+        <>
+          {fit === 'contain' && <img src={url} alt="" aria-hidden="true" className="smart-image__backdrop" loading={eager ? 'eager' : 'lazy'} decoding="async" />}
+          <img
+            src={url}
+            alt={alt}
+            className="smart-image__img"
+            loading={eager ? 'eager' : 'lazy'}
+            decoding="async"
+            onError={() => setFailed(true)}
+          />
+        </>
       )}
     </div>
   );

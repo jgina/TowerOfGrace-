@@ -97,6 +97,27 @@ export default function AdminSettingsPage() {
 
         <section className="admin-card">
           <div className="admin-card__head">
+            <h2>Feed Alerts</h2>
+          </div>
+          <div className="admin-card__body stack">
+            <FormField
+              label="Email the boss when feed runs low"
+              hint="One or more addresses, separated by commas. Sent once when a feed reaches its alert level (10 bags by default)."
+            >
+              <input
+                className="input"
+                type="text"
+                value={form.feedAlertEmails || ''}
+                onChange={(e) => setForm((f) => ({ ...f, feedAlertEmails: e.target.value }))}
+                placeholder="boss@example.com, manager@example.com"
+              />
+            </FormField>
+            <p className="field__hint">Emails also need the email settings (EMAIL_HOST, EMAIL_USER, EMAIL_PASSWORD) in the server .env file. The in-app alert works regardless.</p>
+          </div>
+        </section>
+
+        <section className="admin-card">
+          <div className="admin-card__head">
             <h2>Payment Methods</h2>
           </div>
           <div className="admin-card__body stack">

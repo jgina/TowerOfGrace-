@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { ShoppingCart, Zap, Building2, Check, PackageCheck, Snowflake, Factory, ChefHat, Package, AlertCircle } from 'lucide-react';
+import { ShoppingCart, Zap, Building2, Check, PackageCheck, Snowflake, Factory, ChefHat, Package, AlertCircle, Truck, Receipt } from 'lucide-react';
 import SEO from '../components/SEO';
 import Breadcrumbs from '../components/Breadcrumbs';
 import SmartImage from '../components/SmartImage';
@@ -10,6 +10,8 @@ import ProductCard from '../components/ProductCard';
 import BarChart from '../components/BarChart';
 import { PageLoader, ErrorState } from '../components/Loader';
 import EmptyState from '../components/EmptyState';
+import FeatureGrid from '../components/FeatureGrid';
+import { useContent } from '../context/ContentContext';
 import useFetch from '../hooks/useFetch';
 import { catalogService } from '../services/catalogService';
 import { useCart } from '../context/CartContext';
@@ -23,6 +25,7 @@ export default function ProductDetailsPage() {
   const navigate = useNavigate();
   const { addItem, items: cartItems } = useCart();
   const toast = useToast();
+  const { notes } = useContent('shop');
   const { data, loading, error, reload } = useFetch(() => catalogService.getProduct(slug), [slug]);
   const product = data?.product;
   const related = data?.related || [];
@@ -168,7 +171,7 @@ export default function ProductDetailsPage() {
           <div className="pdp">
             <div className="pdp-gallery">
               <div className="pdp-gallery__main">
-                <SmartImage src={activeImage?.url} alt={activeImage?.alt || product.name} width={1100} ratio="1 / 1" label={product.category?.name} eager />
+                <SmartImage src={activeImage?.url} alt={activeImage?.alt || product.name} width={1100} ratio="1 / 1" label={product.category?.name} eager fit="natural" />
                 {product.isFeatured && <span className="pdp-gallery__flag">Featured</span>}
               </div>
               {images.length > 1 && (
@@ -183,7 +186,7 @@ export default function ProductDetailsPage() {
                       onClick={() => setImageIndex(i)}
                       aria-label={`View image ${i + 1}`}
                     >
-                      <SmartImage src={img.url} alt="" width={200} ratio="1 / 1" />
+                      <SmartImage src={img.url} alt="" width={200} ratio="1 / 1" fit="contain" />
                     </button>
                   ))}
                 </div>
@@ -352,6 +355,15 @@ export default function ProductDetailsPage() {
                 )}
               </div>
             )}
+          </div>
+        </section>
+      )}
+
+      {notes?.items?.length > 0 && (
+        <section className="section pdp-notes">
+          <div className="container">
+            {notes.title && <h2 className="display-title pdp-related__title">{notes.title}</h2>}
+            <FeatureGrid items={notes.items} icons={[Snowflake, Truck, Receipt]} columns={Math.min(notes.items.length, 3)} />
           </div>
         </section>
       )}

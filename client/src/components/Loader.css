@@ -8,6 +8,9 @@
   font-size: var(--text-sm);
   font-weight: var(--weight-semibold);
   color: var(--color-text-muted);
+  /* System font: a loader shown before a print view must not start a web-font download
+     (Chrome waits for pending web fonts before printing / saving as PDF). */
+  font-family: 'Segoe UI', Arial, Helvetica, sans-serif;
 }
 
 .page-loader__spinner {
