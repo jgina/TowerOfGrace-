@@ -16,6 +16,7 @@ export function cloudinaryUrl(url, width) {
  * fit="contain" always shows the whole image; the spare space is filled with a soft blurred copy of it,
  * so portrait, landscape and square photos all sit neatly in the same card shape.
  * fit="natural" shows the whole image at full width and its own height (no crop, no filler).
+ * fit="cutout" is for cut-out photos on white: the whole image on a plain white background.
  * `ratio` then only sizes the placeholder shown before a photo exists.
  */
 export default function SmartImage({ src, alt = '', width, ratio, className = '', label, hint, eager = false, fit = 'cover' }) {

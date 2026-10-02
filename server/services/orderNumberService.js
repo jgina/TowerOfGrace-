@@ -22,4 +22,15 @@ async function nextTripNumber(date = new Date()) {
   return `MKT-${year}-${String(counter.seq).padStart(4, '0')}`;
 }
 
-module.exports = { nextOrderNumber, nextTripNumber };
+// Sequential yearly meat processing run numbers such as PMR-2026-0001.
+async function nextProcessingNumber(date = new Date()) {
+  const year = date.getFullYear();
+  const counter = await Counter.findOneAndUpdate(
+    { _id: `processing-run-${year}` },
+    { $inc: { seq: 1 } },
+    { returnDocument: 'after', upsert: true }
+  );
+  return `PMR-${year}-${String(counter.seq).padStart(4, '0')}`;
+}
+
+module.exports = { nextOrderNumber, nextTripNumber, nextProcessingNumber };

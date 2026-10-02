@@ -14,7 +14,7 @@ import { ErrorState } from '../../components/Loader';
 import useFetch from '../../hooks/useFetch';
 import useDebounce from '../../hooks/useDebounce';
 import { adminService } from '../../services/adminService';
-import { BATCH_STAGES } from '../../utils/constants';
+import { BATCH_STAGES, isLiveBirds } from '../../utils/constants';
 import { formatDate } from '../../utils/format';
 import './AdminBatchesPage.css';
 
@@ -87,7 +87,7 @@ export default function AdminBatchesPage() {
         <select className="select" value={category} onChange={(e) => { setCategory(e.target.value); setPage(1); }} aria-label="Type of bird">
           <option value="">All birds</option>
           {(categories.data || [])
-            .filter((c) => c.slug !== 'eggs')
+            .filter((c) => isLiveBirds(c.slug))
             .map((c) => (
               <option key={c._id} value={c.slug}>
                 {c.name}

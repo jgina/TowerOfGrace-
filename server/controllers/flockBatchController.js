@@ -7,6 +7,7 @@ const pick = require('../utils/pick');
 const { getPagination, buildMeta } = require('../utils/pagination');
 const inventory = require('../services/inventoryService');
 const { markReadyBatches } = require('../services/batchScheduler');
+const { isLiveBirds } = require('../utils/categoryKinds');
 
 const PREFIX = { broilers: 'BRL', noilers: 'NOI', turkeys: 'TRK' };
 const EDITABLE = ['breed', 'supplier', 'house', 'purchaseDate', 'ageAtPurchaseDays', 'quantityPurchased', 'unitCost', 'targetAgeDays', 'targetWeightKg', 'notes'];
@@ -100,7 +101,7 @@ exports.getBatch = asyncHandler(async (req, res) => {
 exports.createBatch = asyncHandler(async (req, res) => {
   const category = await Category.findById(req.body.category);
   if (!category) throw ApiError.badRequest('Choose a category');
-  if (category.slug === 'eggs') throw ApiError.badRequest('Batches are for birds. Eggs are added through products and inventory.');
+  if (!isLiveBirds(category.slug)) throw ApiError.badRequest(`Batches are for live birds. ${category.name} is added through products and inventory.`);
 
   const data = cleanNumbers(pick(req.body, EDITABLE));
   const purchaseDate = data.purchaseDate ? new Date(data.purchaseDate) : new Date();
@@ -206,6 +207,9 @@ exports.transferToStock = asyncHandler(async (req, res) => {
     const product = byId.get(String(a.productId));
     if (!product) throw ApiError.badRequest('A selected product no longer exists');
     if (product.category?.slug === 'eggs') throw ApiError.badRequest('Birds cannot be moved into an egg product');
+    if (!isLiveBirds(product.category?.slug)) {
+      throw ApiError.badRequest(`${product.name} is prepared meat — record a Meat Processing run to turn birds into meat`);
+    }
     if (product.variants.length && !a.variantId) throw ApiError.badRequest(`Choose which option of ${product.name} the birds go into`);
     const variant = a.variantId ? product.variants.id(a.variantId) : null;
     if (a.variantId && !variant) throw ApiError.badRequest(`The selected option of ${product.name} no longer exists`);

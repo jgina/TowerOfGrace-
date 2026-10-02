@@ -1,12 +1,13 @@
 const config = require('../config');
 const { Category, User } = require('../models');
 
-// The four product lines the business sells. Descriptions stay empty for the admin to write.
+// The product lines the business sells. Descriptions stay empty for the admin to write.
 const BASE_CATEGORIES = [
   { name: 'Broilers', slug: 'broilers', variantType: 'weight', sortOrder: 1 },
   { name: 'Noilers', slug: 'noilers', variantType: 'weight', sortOrder: 2 },
   { name: 'Eggs', slug: 'eggs', variantType: 'packaging', sortOrder: 3 },
   { name: 'Turkeys', slug: 'turkeys', variantType: 'weight', sortOrder: 4 },
+  { name: 'Prepared Meat', slug: 'prepared-meat', variantType: 'weight', sortOrder: 5 },
 ];
 
 // Idempotently creates the core categories and the first admin account (from env) on startup.

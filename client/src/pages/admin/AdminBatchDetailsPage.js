@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { useParams } from 'react-router-dom';
-import { Pencil, PackagePlus, HeartCrack, Scale, Lock, BellRing, Wheat } from 'lucide-react';
+import { Link, useParams } from 'react-router-dom';
+import { Pencil, PackagePlus, HeartCrack, Scale, Lock, BellRing, Wheat, Beef } from 'lucide-react';
 import { FeedUsageModal } from '../../components/FeedModals';
 import AdminPageHeader from '../../components/AdminPageHeader';
 import StatusBadge from '../../components/StatusBadge';
@@ -8,6 +8,7 @@ import BatchStageBar from '../../components/BatchStageBar';
 import BatchFormModal from '../../components/BatchFormModal';
 import MoveToStockModal from '../../components/MoveToStockModal';
 import PushToInventoryButton from '../../components/PushToInventoryButton';
+import ProcessingRunModal from '../../components/ProcessingRunModal';
 import BarChart from '../../components/BarChart';
 import Modal from '../../components/Modal';
 import FormField from '../../components/FormField';
@@ -34,6 +35,7 @@ export default function AdminBatchDetailsPage() {
   const [weigh, setWeigh] = useState({ avgWeightKg: '', sampleSize: '', date: today(), note: '' });
   const [busy, setBusy] = useState('');
   const [feeding, setFeeding] = useState(false);
+  const [processing, setProcessing] = useState(false);
   const feedUsage = useFetch(() => adminService.batchFeedUsage(id), [id]);
   const feedStore = useFetch(() => adminService.listFeeds(), []);
 
@@ -85,6 +87,11 @@ export default function AdminBatchDetailsPage() {
           <div className="row row--wrap">
             <StatusBadge tone={stage.tone}>{stage.label}</StatusBadge>
             <PushToInventoryButton batch={batch} onClick={() => setMoving(true)} />
+            {open && batch.stage === 'READY' && batch.live > 0 && (
+              <button type="button" className="btn btn--outline btn--sm" onClick={() => setProcessing(true)}>
+                <Beef /> Process into meat
+              </button>
+            )}
             {open && (
               <>
                 <button type="button" className="btn btn--ghost btn--sm" onClick={() => setEditing(true)}>
@@ -156,6 +163,21 @@ export default function AdminBatchDetailsPage() {
           <dt>Moved to stock</dt>
           <dd>{batch.transferred}</dd>
         </div>
+        {batch.processed > 0 && (
+          <div>
+            <dt>Processed into meat</dt>
+            <dd>
+              {batch.processed}
+              <small className="batch-runs">
+                {(batch.processedRuns || []).map((p) => (
+                  <Link key={p._id} to={`/admin/processing/${p.run}`} className="link">
+                    {p.runNumber}
+                  </Link>
+                ))}
+              </small>
+            </dd>
+          </div>
+        )}
         <div>
           <dt>Latest avg weight</dt>
           <dd>
@@ -421,6 +443,7 @@ export default function AdminBatchDetailsPage() {
 
       <BatchFormModal open={editing} batch={batch} onClose={() => setEditing(false)} onSaved={setData} />
       <MoveToStockModal open={moving} batch={batch} onClose={() => setMoving(false)} onDone={setData} />
+      <ProcessingRunModal open={processing} presetBatchId={batch._id} onClose={() => setProcessing(false)} onCreated={() => reload()} />
       <FeedUsageModal
         open={feeding}
         feeds={feedStore.data?.feeds || []}

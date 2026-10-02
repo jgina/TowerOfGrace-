@@ -9,6 +9,7 @@ const NOTIFICATION_TYPES = [
   'CONTACT_MESSAGE',
   'BATCH_READY', // a flock batch reached its target age
   'FEED_LOW', // a feed in the store fell to its low-stock level
+  'MEAT_EXPIRY', // prepared meat from a processing run reaches its use-by date
 ];
 
 // In-app alerts for the admin panel (shown in the notification bell), independent of email.

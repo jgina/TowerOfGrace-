@@ -4,6 +4,7 @@ const ApiError = require('../utils/ApiError');
 const asyncHandler = require('../utils/asyncHandler');
 const { getPagination, buildMeta } = require('../utils/pagination');
 const inventory = require('../services/inventoryService');
+const { liveBirdsExpr } = require('../utils/categoryKinds');
 
 function buildFilter(query) {
   const { from, to, reason, category, product, status } = query;
@@ -52,7 +53,8 @@ exports.listLosses = asyncHandler(async (req, res) => {
           _id: null,
           units: { $sum: '$quantity' },
           records: { $sum: 1 },
-          birds: { $sum: { $cond: [{ $eq: ['$categorySlug', 'eggs'] }, 0, '$quantity'] } },
+          birds: { $sum: { $cond: [liveBirdsExpr, '$quantity', 0] } },
+          meat: { $sum: { $cond: [{ $eq: ['$categorySlug', 'prepared-meat'] }, '$quantity', 0] } },
           eggs: { $sum: { $cond: [{ $eq: ['$categorySlug', 'eggs'] }, '$quantity', 0] } },
         },
       },
@@ -68,6 +70,7 @@ exports.listLosses = asyncHandler(async (req, res) => {
       records: totals[0]?.records || 0,
       birds: totals[0]?.birds || 0,
       eggs: totals[0]?.eggs || 0,
+      meat: totals[0]?.meat || 0,
       byReason: byReason.map((r) => ({ reason: r._id, units: r.units, records: r.records })),
       byProduct: byProduct.map((p) => ({
         productId: p._id.product,

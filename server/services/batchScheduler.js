@@ -37,7 +37,13 @@ let timer = null;
 
 function startBatchScheduler() {
   if (timer) return;
-  const run = () => markReadyBatches().catch((error) => console.warn(`Batch scheduler: ${error.message}`));
+  const run = () => {
+    markReadyBatches().catch((error) => console.warn(`Batch scheduler: ${error.message}`));
+    // Loaded lazily to keep this module free of circular imports.
+    require('./meatExpiryService')
+      .checkMeatExpiry()
+      .catch((error) => console.warn(`Meat expiry check: ${error.message}`));
+  };
   run();
   timer = setInterval(run, INTERVAL_MS);
   timer.unref?.();

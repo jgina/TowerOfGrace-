@@ -7,6 +7,7 @@ const { Order, Gallery, StockLoss, FeedItem } = require('../models');
 const losses = require('../controllers/stockLossController');
 const notifications = require('../controllers/notificationController');
 const marketTrips = require('../controllers/marketTripController');
+const processing = require('../controllers/processingController');
 const reports = require('../controllers/reportController');
 const batches = require('../controllers/flockBatchController');
 const feeds = require('../controllers/feedController');
@@ -220,6 +221,32 @@ router.post(
   marketTrips.closeTrip
 );
 router.post('/market-trips/:id/cancel', validate([body('reason').optional().trim().isLength({ max: 500 })]), marketTrips.cancelTrip);
+
+// Meat processing — live birds in, prepared meat out
+router.get('/processing', processing.listRuns);
+router.get('/processing/options', processing.options);
+router.get('/processing/:id', processing.getRun);
+router.post(
+  '/processing',
+  validate([
+    body('sourceType').isIn(['BATCH', 'STOCK']).withMessage('Choose where the birds came from'),
+    body('processedOn').optional({ values: 'falsy' }).isISO8601().withMessage('Invalid processing date'),
+    body('useBy').optional({ values: 'falsy' }).isISO8601().withMessage('Invalid use-by date'),
+    body('birdsIn').isInt({ min: 1, max: 1000000 }).withMessage('Enter how many birds were processed'),
+    body('condemned').optional({ values: 'falsy' }).isInt({ min: 0, max: 1000000 }).withMessage('Condemned birds must be a whole number'),
+    body('storage').optional().isIn(['CHILLED', 'FROZEN', 'READY_TO_EAT']).withMessage('Invalid storage'),
+    body('notes').optional().trim().isLength({ max: 1000 }),
+    body('outputs').isArray({ min: 1, max: 30 }).withMessage('Add the prepared meat produced'),
+    body('outputs.*.productId').isMongoId().withMessage('Choose a product on every line'),
+    body('outputs.*.quantity').isInt({ min: 1, max: 1000000 }).withMessage('Every line needs a quantity of at least 1'),
+  ]),
+  processing.createRun
+);
+router.post(
+  '/processing/:id/cancel',
+  validate([body('reason').trim().notEmpty().withMessage('Give a reason for cancelling this run').isLength({ max: 500 })]),
+  processing.cancelRun
+);
 
 // Orders
 router.get('/orders', orders.adminListOrders);

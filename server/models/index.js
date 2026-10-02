@@ -16,4 +16,5 @@ module.exports = {
   FlockBatch: require('./FlockBatch'),
   FeedItem: require('./FeedItem'),
   FeedTransaction: require('./FeedTransaction'),
+  ProcessingRun: require('./ProcessingRun'),
 };

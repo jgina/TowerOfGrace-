@@ -1,5 +1,5 @@
 const mongoose = require('mongoose');
-const { Product, Order, User, BulkOrder, ContactMessage, StockLoss, MarketTrip, FlockBatch, FeedItem } = require('../models');
+const { Product, Order, User, BulkOrder, ContactMessage, StockLoss, MarketTrip, FlockBatch, FeedItem, ProcessingRun, Category } = require('../models');
 const ApiError = require('../utils/ApiError');
 const asyncHandler = require('../utils/asyncHandler');
 const escapeRegex = require('../utils/escapeRegex');
@@ -7,6 +7,7 @@ const { getPagination, buildMeta } = require('../utils/pagination');
 const { stockStatus } = require('../services/productPresenter');
 const { refreshAggregates } = require('../services/inventoryService');
 const ledger = require('../services/stockLedger');
+const { liveBirdsExpr } = require('../utils/categoryKinds');
 const { unitsAtMarket, lineKey: tripLineKey } = require('./marketTripController');
 
 // ---------- Dashboard ----------
@@ -44,6 +45,9 @@ exports.getDashboard = asyncHandler(async (req, res) => {
     marketAgg,
     openBatches,
     feedItems,
+    meatProducts,
+    meatExpiring,
+    processed30d,
   ] = await Promise.all([
     Product.countDocuments(),
     Order.countDocuments(),
@@ -81,7 +85,7 @@ exports.getDashboard = asyncHandler(async (req, res) => {
       {
         $group: {
           _id: null,
-          birds: { $sum: { $cond: [{ $eq: ['$categorySlug', 'eggs'] }, 0, '$quantity'] } },
+          birds: { $sum: { $cond: [liveBirdsExpr, '$quantity', 0] } },
           eggs: { $sum: { $cond: [{ $eq: ['$categorySlug', 'eggs'] }, '$quantity', 0] } },
         },
       },
@@ -100,6 +104,15 @@ exports.getDashboard = asyncHandler(async (req, res) => {
     ]),
     FlockBatch.find({ status: { $in: ['ACTIVE', 'READY'] } }),
     FeedItem.find({ isActive: true }).select('name stockBags lowStockBags').lean(),
+    Category.findOne({ slug: 'prepared-meat' })
+      .select('_id')
+      .lean()
+      .then((cat) => (cat ? Product.find({ category: cat._id }).select('stock variants.stock').lean() : [])),
+    ProcessingRun.countDocuments({ status: 'COMPLETED', useBy: { $lte: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000), $gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) } }),
+    ProcessingRun.aggregate([
+      { $match: { status: 'COMPLETED', processedOn: { $gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) } } },
+      { $group: { _id: null, birds: { $sum: '$birdsIn' } } },
+    ]),
   ]);
   const batchSummaries = openBatches.map((b) => ({ status: b.status, ...b.counts() }));
 
@@ -138,6 +151,9 @@ exports.getDashboard = asyncHandler(async (req, res) => {
       birdsGrowing: batchSummaries.reduce((s, b) => s + b.live, 0),
       batchesReady: batchSummaries.filter((b) => b.status === 'READY').length,
       feedBags: Math.round(feedItems.reduce((s, f) => s + f.stockBags, 0) * 100) / 100,
+      meatInStock: meatProducts.reduce((s, p) => s + (p.variants?.length ? p.variants.reduce((x, v) => x + (v.stock || 0), 0) : p.stock || 0), 0),
+      meatExpiring,
+      birdsProcessed30d: processed30d[0]?.birds || 0,
       lowFeeds: feedItems.filter((f) => f.stockBags <= f.lowStockBags).map((f) => ({ name: f.name, stockBags: f.stockBags })),
     },
     lowStock,

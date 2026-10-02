@@ -78,3 +78,13 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+
+/* Cut-out photos on a white background: shown whole on clean white, never cropped. */
+.smart-image--cutout {
+  background: #fff;
+}
+
+.smart-image--cutout .smart-image__img {
+  object-fit: contain;
+  padding: 4%;
+}

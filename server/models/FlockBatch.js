@@ -41,6 +41,15 @@ const transferSchema = new mongoose.Schema({
   byName: String,
 });
 
+// Birds taken straight from the batch into a meat processing run.
+const processedSchema = new mongoose.Schema({
+  date: { type: Date, default: Date.now },
+  run: { type: mongoose.Schema.Types.ObjectId, ref: 'ProcessingRun', required: true },
+  runNumber: String,
+  quantity: { type: Number, required: true, min: 1 },
+  byName: String,
+});
+
 const flockBatchSchema = new mongoose.Schema(
   {
     batchCode: { type: String, required: true, unique: true, uppercase: true, trim: true, maxlength: 40 },
@@ -61,6 +70,7 @@ const flockBatchSchema = new mongoose.Schema(
     mortality: [mortalitySchema],
     weighings: [weighingSchema],
     transfers: [transferSchema],
+    processedRuns: [processedSchema],
 
     status: { type: String, enum: BATCH_STATUSES, default: 'ACTIVE', index: true },
     readyAt: Date,
@@ -87,7 +97,8 @@ flockBatchSchema.methods.ageDays = function ageDays(at = new Date()) {
 flockBatchSchema.methods.counts = function counts() {
   const deaths = (this.mortality || []).reduce((s, m) => s + m.quantity, 0);
   const transferred = (this.transfers || []).reduce((s, t) => s + t.quantity, 0);
-  return { deaths, transferred, live: this.quantityPurchased - deaths - transferred };
+  const processed = (this.processedRuns || []).reduce((s, p) => s + p.quantity, 0);
+  return { deaths, transferred, processed, live: this.quantityPurchased - deaths - transferred - processed };
 };
 
 // Stage follows the batch's age against its own target age.
@@ -103,7 +114,7 @@ flockBatchSchema.methods.stage = function stage(at = new Date()) {
 };
 
 flockBatchSchema.methods.summary = function summary() {
-  const { deaths, transferred, live } = this.counts();
+  const { deaths, transferred, processed, live } = this.counts();
   const age = this.ageDays();
   const lastWeighing = [...(this.weighings || [])].sort((a, b) => new Date(b.date) - new Date(a.date))[0];
   return {
@@ -115,6 +126,7 @@ flockBatchSchema.methods.summary = function summary() {
     readyDate: new Date(new Date(this.purchaseDate).getTime() + (this.targetAgeDays - (this.ageAtPurchaseDays || 1)) * DAY_MS),
     deaths,
     transferred,
+    processed,
     live,
     mortalityRate: this.quantityPurchased ? Math.round((deaths / this.quantityPurchased) * 1000) / 10 : 0,
     latestWeightKg: lastWeighing?.avgWeightKg ?? null,

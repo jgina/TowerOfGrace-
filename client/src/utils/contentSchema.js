@@ -387,6 +387,43 @@ export const DEFAULT_CONTENT = {
     },
   },
   shop: {
+    prepared: {
+      eyebrow: 'Ready to cook',
+      title: 'Prepared Meat',
+      text:
+        'Skip the plucking and cleaning. Our prepared poultry comes dressed, cleaned and ready for your pot, grill or oven — from birds raised on our farm.',
+      image: null,
+      points:
+        'Cleaned and chilled promptly after processing\nHygienically packed and labelled by weight\nWhole birds, cuts and ready-to-eat options\nOrder ahead for parties, events and bulk',
+      ctaLabel: 'Shop Prepared Meat',
+      note: 'Availability changes from day to day — the shop always shows what is in stock now.',
+      items: [
+        {
+          title: 'Whole Dressed Chicken',
+          tag: 'Whole bird',
+          text: 'Defeathered, cleaned and gutted — ready to roast, stew, or cut the way you like.',
+          image: null,
+        },
+        {
+          title: 'Chicken Cuts',
+          tag: 'Parts',
+          text: 'Wings, drumsticks, thighs and breast. Buy just the parts you need for your recipe.',
+          image: null,
+        },
+        {
+          title: 'Roasted & Grilled',
+          tag: 'Ready to eat',
+          text: 'Golden, well-seasoned chicken for parties, events and busy days. Best ordered ahead.',
+          image: null,
+        },
+        {
+          title: 'Dressed Turkey & Noiler',
+          tag: 'Festive',
+          text: 'Turkey and noiler dressed and ready for festive roasts, pepper soup and traditional dishes.',
+          image: null,
+        },
+      ],
+    },
     guide: {
       eyebrow: 'Buying guide',
       title: 'Ordering Made Easy',
@@ -727,9 +764,25 @@ export const CONTENT_SECTIONS = [
   },
   {
     key: 'shop',
-    label: 'Products Page',
-    description: 'Buying guide and size guide on the Our Products page, and the notes shown on every product page.',
+    label: 'Products & Prepared Meat',
+    description: 'Prepared meat section (homepage and Our Products), buying guide, size guide and the notes on every product page.',
     groups: [
+      {
+        title: 'Prepared meat',
+        fields: [
+          ...heading('prepared'),
+          { name: 'prepared.image', label: 'Feature image', type: 'image', hint: 'Or add client/src/assets/site/prepared-meat.jpg' },
+          { name: 'prepared.points', label: 'Highlights (one per line)', type: 'textarea' },
+          { name: 'prepared.ctaLabel', label: 'Button label', type: 'text' },
+          { name: 'prepared.note', label: 'Small note', type: 'textarea' },
+          list(
+            'prepared.items',
+            'Prepared meat options',
+            [...titleText, { name: 'tag', label: 'Badge (e.g. Ready to eat)', type: 'text' }, image],
+            SLOT_HINT('shop-prepared')
+          ),
+        ],
+      },
       { title: 'Buying guide', fields: [...heading('guide'), list('guide.items', 'Guide cards', [...titleText, ...link, image], SLOT_HINT('shop-guide'))] },
       {
         title: 'Size guide',

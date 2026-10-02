@@ -122,6 +122,13 @@ export default function FarmStatement({ statement: s }) {
             <dd>{n(summary.eggsLost)}</dd>
           </div>
           <div>
+            <dt>Birds processed</dt>
+            <dd>
+              {n(summary.birdsProcessed)}
+              {summary.meatLost ? <small> ({n(summary.meatLost)} meat spoiled)</small> : null}
+            </dd>
+          </div>
+          <div>
             <dt>Unpaid orders</dt>
             <dd>
               {n(summary.outstandingOrders)} <small>({money(summary.outstandingValue)})</small>
@@ -218,7 +225,7 @@ export default function FarmStatement({ statement: s }) {
       <Section
         number={next()}
         title="Stock Movement"
-        note={`Opening + added − online sales − taken to market + returned from market − losses = closing. "Added" covers opening stock, restocks and manual corrections.${
+        note={`Opening + added ± processed − online sales − taken to market + returned from market − losses = closing. "Added" covers opening stock, restocks and manual corrections; "Processed" is live birds taken for meat processing (−) and the prepared meat produced (+).${
           stockNote ? ` ${stockNote}` : ''
         }`}
       >
@@ -228,6 +235,7 @@ export default function FarmStatement({ statement: s }) {
               <th>Product</th>
               <th className="num">Opening</th>
               <th className="num">Added</th>
+              <th className="num">Processed</th>
               <th className="num">Online sales</th>
               <th className="num">To market</th>
               <th className="num">Returned</th>
@@ -245,6 +253,7 @@ export default function FarmStatement({ statement: s }) {
                   </td>
                   <td className="num">{n(r.opening)}</td>
                   <td className="num">{r.added ? `+${n(r.added)}` : '–'}</td>
+                  <td className="num">{r.processing ? `${r.processing > 0 ? '+' : '−'}${n(Math.abs(r.processing))}` : '–'}</td>
                   <td className="num">{r.onlineSales ? `−${n(r.onlineSales)}` : '–'}</td>
                   <td className="num">{r.marketOut ? `−${n(r.marketOut)}` : '–'}</td>
                   <td className="num">{r.marketReturn ? `+${n(r.marketReturn)}` : '–'}</td>
@@ -253,7 +262,7 @@ export default function FarmStatement({ statement: s }) {
                 </tr>
               ))
             ) : (
-              <Empty cols={8} text="No stock on record for this period." />
+              <Empty cols={9} text="No stock on record for this period." />
             )}
           </tbody>
           <tfoot>
@@ -261,6 +270,7 @@ export default function FarmStatement({ statement: s }) {
               <td>Totals</td>
               <td className="num">{n(stock.totals.opening)}</td>
               <td className="num">+{n(stock.totals.added)}</td>
+              <td className="num">{stock.totals.processing ? `${stock.totals.processing > 0 ? '+' : '−'}${n(Math.abs(stock.totals.processing))}` : '–'}</td>
               <td className="num">−{n(stock.totals.onlineSales)}</td>
               <td className="num">−{n(stock.totals.marketOut)}</td>
               <td className="num">+{n(stock.totals.marketReturn)}</td>
@@ -302,7 +312,7 @@ export default function FarmStatement({ statement: s }) {
             <tfoot>
               <tr>
                 <td colSpan={3}>{s.lossByReason.map((r) => `${LOSS_REASONS[r.reason]?.label.split(' (')[0] || r.reason}: ${n(r.units)}`).join('  ·  ')}</td>
-                <td className="num">{n(summary.birdsLost + summary.eggsLost)}</td>
+                <td className="num">{n(summary.birdsLost + summary.eggsLost + (summary.meatLost || 0))}</td>
                 <td />
               </tr>
             </tfoot>
@@ -345,6 +355,61 @@ export default function FarmStatement({ statement: s }) {
               <Empty cols={9} text="No market trips in this period." />
             )}
           </tbody>
+        </table>
+      </Section>
+
+      {/* ---------- Meat processing ---------- */}
+      <Section
+        number={next()}
+        title="Meat Processing"
+        note="Live birds processed into prepared meat. Yield is dressed weight as a share of live weight, where both were recorded."
+      >
+        <table className="stmt-table">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Run</th>
+              <th>Birds from</th>
+              <th className="num">Birds</th>
+              <th className="num">Condemned</th>
+              <th>Meat produced</th>
+              <th className="num">Dressed kg</th>
+              <th className="num">Yield</th>
+            </tr>
+          </thead>
+          <tbody>
+            {s.processing?.runs?.length ? (
+              s.processing.runs.map((r) => (
+                <tr key={r.runNumber}>
+                  <td className="nowrap">{formatDate(r.date)}</td>
+                  <td className="mono">{r.runNumber}</td>
+                  <td>{r.source}</td>
+                  <td className="num">{n(r.birdsIn)}</td>
+                  <td className="num">{r.condemned ? n(r.condemned) : '–'}</td>
+                  <td>{r.products}</td>
+                  <td className="num">{r.dressedKg ? n(r.dressedKg) : '–'}</td>
+                  <td className="num">{r.yieldPct ? `${r.yieldPct}%` : '–'}</td>
+                </tr>
+              ))
+            ) : (
+              <Empty cols={8} text="No meat processing in this period." />
+            )}
+          </tbody>
+          {s.processing?.runs?.length > 0 && (
+            <tfoot>
+              <tr>
+                <td colSpan={3}>
+                  {n(s.processing.totals.runs)} run{s.processing.totals.runs === 1 ? '' : 's'}
+                  {s.processing.totals.processingCost ? ` · processing cost ${money(s.processing.totals.processingCost)}` : ''}
+                </td>
+                <td className="num">{n(s.processing.totals.birdsIn)}</td>
+                <td className="num">{n(s.processing.totals.condemned)}</td>
+                <td>{n(s.processing.totals.unitsOut)} units</td>
+                <td className="num">{s.processing.totals.dressedKg ? n(s.processing.totals.dressedKg) : '–'}</td>
+                <td className="num">{s.processing.totals.yieldPct ? `${s.processing.totals.yieldPct}%` : '–'}</td>
+              </tr>
+            </tfoot>
+          )}
         </table>
       </Section>
 

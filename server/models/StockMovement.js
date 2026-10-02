@@ -14,6 +14,8 @@ const MOVEMENT_TYPES = [
   'MARKET_OUT', // taken to market
   'MARKET_RETURN', // brought back from market (or trip cancelled)
   'BATCH_TRANSFER', // grown birds from a flock batch confirmed ready and moved into stock
+  'PROCESSING_OUT', // live birds taken from stock to be processed into meat
+  'PROCESSING_IN', // prepared meat produced by a processing run
 ];
 
 const stockMovementSchema = new mongoose.Schema(

@@ -13,7 +13,9 @@ const check = async (name, fn) => {
     await fn();
     results.push(['PASS', name]);
   } catch (error) {
-    results.push(['FAIL', name, error.message]);
+    // Unexpected errors (not assertions) include where they were thrown.
+    const where = error.code === 'ERR_ASSERTION' ? '' : ` @ ${String(error.stack || '').split('\n').slice(1, 3).map((l) => l.trim()).join(' < ')}`;
+    results.push(['FAIL', name, `${error.message}${where}`]);
   }
 };
 
@@ -75,10 +77,10 @@ function scratchUri(uri) {
     assert.equal(r.status, 200);
   });
 
-  await check('base categories seeded (Broilers, Noilers, Eggs, Turkeys)', async () => {
+  await check('base categories seeded (Broilers, Noilers, Eggs, Turkeys, Prepared Meat)', async () => {
     const r = await call('GET', '/categories');
     categories = r.body.categories;
-    assert.deepEqual(categories.map((c) => c.slug), ['broilers', 'noilers', 'eggs', 'turkeys']);
+    assert.deepEqual(categories.map((c) => c.slug), ['broilers', 'noilers', 'eggs', 'turkeys', 'prepared-meat']);
   });
 
   await check('admin login', async () => {
@@ -731,6 +733,129 @@ function scratchUri(uri) {
     assert.equal(store.feeds.find((f) => f._id === feed._id).stockBags, 28.5);
     assert.ok(store.summary.fedTo30Days.STOCK >= 3 && store.summary.fedTo30Days.GROUP >= 1.5);
     assert.equal((await call('GET', `/admin/feeds/batch/${ready._id}`, null, adminToken)).body.totalBags, 3, 'a ready batch still tracks its own feed');
+  });
+
+  await check('prepared meat sells like any product but is never treated as live birds', async () => {
+    const meatCat = categories.find((c) => c.slug === 'prepared-meat');
+    const created = await call('POST', '/admin/products', { name: 'Dressed Chicken', sku: '', category: meatCat._id, price: '9000', stock: '10', variants: [] }, adminToken);
+    assert.equal(created.status, 201, JSON.stringify(created.body));
+    const meat = created.body.product;
+    const listed = await call('GET', '/products?category=prepared-meat');
+    assert.ok(listed.body.products.some((p) => p._id === meat._id), 'prepared meat is listed in its shop category');
+
+    const batch = await call('POST', '/admin/batches', { category: meatCat._id, quantityPurchased: 10, targetAgeDays: 42 }, adminToken);
+    assert.equal(batch.status, 400, 'prepared meat cannot be a flock batch');
+    const targets = (await call('GET', '/admin/feeds/targets', null, adminToken)).body;
+    assert.ok(!targets.products.some((p) => p._id === meat._id), 'prepared meat is not fed');
+
+    const before = (await call('GET', '/admin/stock-losses', null, adminToken)).body.summary;
+    const dashBefore = (await call('GET', '/admin/dashboard', null, adminToken)).body.stats.birdLosses30d;
+    const spoiled = await call('POST', '/admin/stock-losses', { productId: meat._id, quantity: 2, reason: 'SPOILED', notes: 'Cold chain' }, adminToken);
+    assert.equal(spoiled.status, 201, JSON.stringify(spoiled.body));
+    const after = (await call('GET', '/admin/stock-losses', null, adminToken)).body.summary;
+    assert.equal(after.meat, before.meat + 2);
+    assert.equal(after.birds, before.birds, 'spoiled meat is not counted as birds lost');
+    assert.equal((await call('GET', '/admin/dashboard', null, adminToken)).body.stats.birdLosses30d, dashBefore);
+  });
+
+  await check('meat processing: birds in (stock or ready batch), prepared meat out, yield, expiry alert, cancel restores', async () => {
+    const meatCat = categories.find((c) => c.slug === 'prepared-meat');
+    const broilers = categories.find((c) => c.slug === 'broilers');
+    const eggs = categories.find((c) => c.slug === 'eggs');
+    const createdLive = await call('POST', '/admin/products', { name: 'Process Broiler', sku: '', category: broilers._id, price: '7000', stock: '20', variants: [] }, adminToken);
+    assert.equal(createdLive.status, 201, JSON.stringify(createdLive.body));
+    const createdMeat = await call('POST', '/admin/products', { name: 'Whole Dressed Chicken', sku: '', category: meatCat._id, price: '9500', stock: '0', variants: [] }, adminToken);
+    assert.equal(createdMeat.status, 201, JSON.stringify(createdMeat.body));
+    const live = createdLive.body.product;
+    const meat = createdMeat.body.product;
+    const stockOf = async (id) => {
+      const r = await call('GET', `/admin/products/${id}`, null, adminToken);
+      assert.equal(r.status, 200, JSON.stringify(r.body));
+      return r.body.product.stock;
+    };
+
+    const options = (await call('GET', '/admin/processing/options', null, adminToken)).body;
+    assert.ok(options.birdStock.some((l) => l.productId === live._id), 'live birds in stock can be processed');
+    assert.ok(options.meatProducts.some((p) => p._id === meat._id), 'prepared meat products are offered as outputs');
+    assert.ok(!options.birdStock.some((l) => l.productId === meat._id), 'prepared meat is never a source');
+
+    const run = await call(
+      'POST',
+      '/admin/processing',
+      { sourceType: 'STOCK', productId: live._id, birdsIn: 5, condemned: 1, liveWeightKg: 12.5, dressedWeightKg: 9, storage: 'CHILLED', outputs: [{ productId: meat._id, quantity: 4, weightKg: 9 }] },
+      adminToken
+    );
+    assert.equal(run.status, 201, JSON.stringify(run.body));
+    assert.match(run.body.run.runNumber, /^PMR-\d{4}-\d{4}$/);
+    assert.equal(run.body.run.yieldPct, 72);
+    assert.equal(run.body.run.unitsOut, 4);
+    assert.equal(await stockOf(live._id), 15, 'birds leave live stock');
+    assert.equal(await stockOf(meat._id), 4, 'prepared meat enters stock');
+    const useBy = new Date(run.body.run.useBy);
+    assert.ok(useBy - Date.now() > 2 * 86400000 && useBy - Date.now() < 4 * 86400000, 'chilled meat defaults to a 3-day use-by');
+
+    const tooMany = await call('POST', '/admin/processing', { sourceType: 'STOCK', productId: live._id, birdsIn: 999, outputs: [{ productId: meat._id, quantity: 1 }] }, adminToken);
+    assert.equal(tooMany.status, 409);
+    assert.equal(await stockOf(meat._id), 4, 'a failed run changes nothing');
+    const eggItem = (await call('POST', '/admin/products', { name: 'Proc Eggs', sku: '', category: eggs._id, price: '100', stock: '1', variants: [] }, adminToken)).body.product;
+    const wrongOutput = await call('POST', '/admin/processing', { sourceType: 'STOCK', productId: live._id, birdsIn: 1, outputs: [{ productId: eggItem._id, quantity: 1 }] }, adminToken);
+    assert.equal(wrongOutput.status, 400, 'only prepared meat products can be produced');
+    const meatAsSource = await call('POST', '/admin/processing', { sourceType: 'STOCK', productId: meat._id, birdsIn: 1, outputs: [{ productId: meat._id, quantity: 1 }] }, adminToken);
+    assert.equal(meatAsSource.status, 400);
+    assert.equal(await stockOf(live._id), 15);
+
+    // From a flock batch: only once ready, and the birds leave the batch (not shop stock).
+    const fiftyDaysAgo = new Date(Date.now() - 50 * 86400000).toISOString().slice(0, 10);
+    const ready = (await call('POST', '/admin/batches', { category: broilers._id, quantityPurchased: 30, purchaseDate: fiftyDaysAgo, targetAgeDays: 42 }, adminToken)).body.batch;
+    const young = (await call('POST', '/admin/batches', { category: broilers._id, quantityPurchased: 30, targetAgeDays: 42 }, adminToken)).body.batch;
+    const early = await call('POST', '/admin/processing', { sourceType: 'BATCH', batchId: young._id, birdsIn: 5, outputs: [{ productId: meat._id, quantity: 5 }] }, adminToken);
+    assert.equal(early.status, 409, 'a growing batch cannot be processed');
+    const fromBatch = await call('POST', '/admin/processing', { sourceType: 'BATCH', batchId: ready._id, birdsIn: 10, storage: 'FROZEN', outputs: [{ productId: meat._id, quantity: 10 }] }, adminToken);
+    assert.equal(fromBatch.status, 201, JSON.stringify(fromBatch.body));
+    let batchNow = (await call('GET', `/admin/batches/${ready._id}`, null, adminToken)).body.batch;
+    assert.equal(batchNow.live, 20);
+    assert.equal(batchNow.processed, 10);
+    assert.equal(await stockOf(meat._id), 14);
+
+    // Statement: processing has its own column and every stock row still balances.
+    const thisMonth = new Date();
+    const statementRes = await call('GET', `/admin/reports/statement?type=month&year=${thisMonth.getFullYear()}&month=${thisMonth.getMonth() + 1}`, null, adminToken);
+    assert.equal(statementRes.status, 200, JSON.stringify(statementRes.body));
+    const { statement } = statementRes.body;
+    assert.equal(statement.stock.rows.find((r) => r.productName === 'Whole Dressed Chicken').processing, 14);
+    assert.equal(statement.stock.rows.find((r) => r.productName === 'Process Broiler').processing, -5);
+    statement.stock.rows.forEach((r) => {
+      assert.equal(r.opening + r.added + r.processing - r.onlineSales - r.marketOut + r.marketReturn - r.losses, r.closing);
+    });
+    assert.ok(statement.processing.totals.birdsIn >= 15);
+
+    // Expiry alert: sent once, when the use-by date is within a day.
+    const soon = await call('POST', '/admin/processing', { sourceType: 'STOCK', productId: live._id, birdsIn: 1, storage: 'READY_TO_EAT', outputs: [{ productId: meat._id, quantity: 1 }] }, adminToken);
+    assert.equal(soon.status, 201, JSON.stringify(soon.body));
+    const { checkMeatExpiry } = require('../services/meatExpiryService');
+    assert.ok((await checkMeatExpiry()) >= 1);
+    assert.equal(await checkMeatExpiry(), 0, 'no repeat alerts');
+    const alerts = (await call('GET', '/admin/notifications?limit=50', null, adminToken)).body.notifications.filter(
+      (n) => n.type === 'MEAT_EXPIRY' && n.title.includes(soon.body.run.runNumber)
+    );
+    assert.equal(alerts.length, 1);
+    const list = (await call('GET', '/admin/processing', null, adminToken)).body;
+    assert.ok(list.summary.birds30d >= 16);
+    assert.ok(list.expiring.some((r) => r.runNumber === soon.body.run.runNumber));
+    assert.ok((await call('GET', '/admin/dashboard', null, adminToken)).body.stats.meatInStock >= 15);
+
+    // Cancelling puts everything back.
+    assert.equal((await call('POST', `/admin/processing/${run.body.run._id}/cancel`, {}, adminToken)).status, 400, 'a reason is required');
+    const cancelled = await call('POST', `/admin/processing/${run.body.run._id}/cancel`, { reason: 'Entered twice' }, adminToken);
+    assert.equal(cancelled.status, 200, JSON.stringify(cancelled.body));
+    assert.equal(await stockOf(live._id), 19, 'birds returned to stock (1 is still in the ready-to-eat run)');
+    assert.equal(await stockOf(meat._id), 11);
+    assert.equal((await call('POST', `/admin/processing/${run.body.run._id}/cancel`, { reason: 'again' }, adminToken)).status, 409);
+    await call('POST', `/admin/processing/${fromBatch.body.run._id}/cancel`, { reason: 'Test' }, adminToken);
+    batchNow = (await call('GET', `/admin/batches/${ready._id}`, null, adminToken)).body.batch;
+    assert.equal(batchNow.live, 30, 'birds returned to the batch');
+    assert.equal(await stockOf(meat._id), 1);
+    assert.equal((await call('GET', '/admin/processing', null, customerToken)).status, 403);
   });
 
   await check('bank transfer details are published for checkout', async () => {

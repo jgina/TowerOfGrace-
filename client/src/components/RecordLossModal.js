@@ -45,6 +45,7 @@ export default function RecordLossModal({ open, onClose, onSaved, preset }) {
   const qty = parseInt(form.quantity, 10);
   const tooMany = available !== null && qty > available;
   const isEggs = product?.category?.slug === 'eggs';
+  const isMeat = product?.category?.slug === 'prepared-meat';
 
   const set = (field) => (e) => setForm((f) => ({ ...f, [field]: e.target.value }));
 
@@ -120,7 +121,7 @@ export default function RecordLossModal({ open, onClose, onSaved, preset }) {
         )}
 
         <FormField
-          label={isEggs ? 'Quantity lost (packs)' : 'Number of birds'}
+          label={isEggs ? 'Quantity lost (packs)' : isMeat ? 'Quantity lost (units)' : 'Number of birds'}
           required
           error={tooMany ? `Only ${available} unreserved in stock` : undefined}
           hint={available !== null && !tooMany ? `${available} unreserved in stock${Number.isInteger(qty) && qty > 0 ? ` → ${available - qty} after` : ''}` : undefined}

@@ -66,6 +66,7 @@ export default function Footer() {
           <Link to="/products/noilers">Noilers</Link>
           <Link to="/products/eggs">Eggs</Link>
           <Link to="/products/turkeys">Turkeys</Link>
+          <Link to="/products/prepared-meat">Prepared Meat</Link>
           <Link to="/bulk-orders">Bulk Orders</Link>
         </div>
 

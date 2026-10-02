@@ -71,6 +71,13 @@ export const adminService = {
   recordFeedUsage: (payload) => api.post('/admin/feeds/usage', payload).then(data),
   adjustFeed: (id, payload) => api.post(`/admin/feeds/${id}/adjust`, payload).then(data),
 
+  // Meat processing
+  listProcessing: (params) => api.get('/admin/processing', { params }).then(data),
+  processingOptions: () => api.get('/admin/processing/options').then(data),
+  getProcessingRun: (id) => api.get(`/admin/processing/${id}`).then((r) => r.data.run),
+  createProcessingRun: (payload) => api.post('/admin/processing', payload).then(data),
+  cancelProcessingRun: (id, reason) => api.post(`/admin/processing/${id}/cancel`, { reason }).then(data),
+
   // Market trips
   listMarketTrips: (params) => api.get('/admin/market-trips', { params }).then(data),
   getMarketTrip: (id) => api.get(`/admin/market-trips/${id}`).then((r) => r.data.trip),

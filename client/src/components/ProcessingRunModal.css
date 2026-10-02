@@ -1,0 +1,151 @@
+.proc-form {
+  gap: var(--space-6);
+}
+
+.proc-step {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  min-width: 0;
+  padding: 0;
+  border: 0;
+}
+
+.proc-step legend {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-3);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-heavy);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--brand-green-800);
+}
+
+.proc-step legend span {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--brand-green-800);
+  color: var(--brand-amber-300);
+  font-size: var(--text-xs);
+}
+
+.proc-step legend small {
+  font-weight: var(--weight-medium);
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--color-text-subtle);
+}
+
+/* Source + storage choices */
+.proc-source,
+.proc-storage {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-3);
+}
+
+.proc-storage {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.proc-source__option,
+.proc-storage__option {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  padding: var(--space-3) var(--space-4);
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  text-align: left;
+  transition: border-color var(--transition-fast), background var(--transition-fast);
+}
+
+.proc-source__option svg {
+  width: 20px;
+  height: 20px;
+  margin-bottom: var(--space-1);
+  color: var(--brand-green-600);
+}
+
+.proc-source__option strong,
+.proc-storage__option strong {
+  font-size: var(--text-sm);
+}
+
+.proc-source__option small,
+.proc-storage__option small {
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+}
+
+.proc-source__option:hover,
+.proc-storage__option:hover {
+  border-color: var(--brand-green-600);
+}
+
+.proc-source__option.is-active,
+.proc-storage__option.is-active {
+  border-color: var(--brand-green-700);
+  background: var(--brand-green-50);
+  box-shadow: inset 0 0 0 1px var(--brand-green-700);
+}
+
+/* Yield read-out */
+.proc-yield {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--space-2) var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-sm);
+  background: var(--brand-green-50);
+  font-size: var(--text-sm);
+}
+
+.proc-yield strong {
+  font-family: var(--font-display);
+  font-size: var(--text-lg);
+  color: var(--brand-green-700);
+}
+
+.proc-yield small {
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+}
+
+.proc-yield.is-odd {
+  background: var(--color-warning-bg);
+}
+
+.proc-yield.is-odd strong {
+  color: var(--color-warning);
+}
+
+/* Output lines: product, option, qty, kg, remove */
+.proc-line {
+  grid-template-columns: minmax(0, 1.5fr) minmax(0, 1.1fr) 80px 80px 36px;
+}
+
+@media (max-width: 760px) {
+  .proc-source,
+  .proc-storage {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .proc-line {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 36px;
+  }
+
+  .proc-line > select:first-child,
+  .proc-line > select:nth-child(2),
+  .proc-line > .trip-line__single {
+    grid-column: 1 / -1;
+  }
+}

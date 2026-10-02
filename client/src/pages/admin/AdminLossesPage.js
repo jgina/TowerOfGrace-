@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Plus, Skull, Egg, ClipboardList, Undo2, HeartPulse, Truck } from 'lucide-react';
+import { Plus, Skull, Egg, ClipboardList, Undo2, HeartPulse, Truck, Beef } from 'lucide-react';
 import AdminPageHeader from '../../components/AdminPageHeader';
 import AdminStatsCard from '../../components/AdminStatsCard';
 import DataTable from '../../components/DataTable';
@@ -78,7 +78,7 @@ export default function AdminLossesPage() {
       <AdminPageHeader
         eyebrow="Inventory"
         title="Mortality & Losses"
-        subtitle="Record dead birds, broken eggs and other losses. Each entry deducts from stock so product figures stay accurate."
+        subtitle="Record dead birds, broken eggs, spoiled meat and other losses. Each entry deducts from stock so product figures stay accurate."
         actions={
           <button type="button" className="btn btn--accent" onClick={() => setRecording(true)}>
             <Plus /> Record Loss
@@ -89,6 +89,7 @@ export default function AdminLossesPage() {
       <div className="stats-grid losses-stats">
         <AdminStatsCard tone="red" icon={Skull} label="Birds lost" value={summary?.birds ?? '—'} hint={periodLabel} />
         <AdminStatsCard tone="amber" icon={Egg} label="Eggs lost (packs)" value={summary?.eggs ?? '—'} hint={periodLabel} />
+        <AdminStatsCard icon={Beef} label="Prepared meat spoiled" value={summary?.meat ?? '—'} hint={periodLabel} />
         <AdminStatsCard icon={ClipboardList} label="Loss records" value={summary?.records ?? '—'} hint={periodLabel} />
         <AdminStatsCard
           tone="dark"

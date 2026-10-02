@@ -26,7 +26,8 @@ reordered in Admin → Content, the numbered files follow the position, not the 
 | `bulk-hero` | Bulk Orders header |
 | `contact-hero` | Contact header |
 | `gallery-hero` | Gallery header |
-| `category-broilers`, `category-noilers`, `category-eggs`, `category-turkeys` | Product line photos (used when a category has no uploaded image) |
+| `prepared-meat` | Prepared Meat section feature image (homepage and Our Products) |
+| `category-broilers`, `category-noilers`, `category-eggs`, `category-turkeys`, `category-prepared-meat` | Product line photos (used when a category has no uploaded image) |
 
 ## Card images
 
@@ -43,6 +44,7 @@ reordered in Admin → Content, the numbered files follow the position, not the 
 | `quality-foodsafety-1` … `-6` | Quality · Food safety tips | Storing chicken, Thawing, Cooking, Storing eggs, Checking eggs, Kitchen hygiene |
 | `production-steps-1` … `-6` | How We Produce · steps | Sourcing, Brooding, Rearing, Health checks, Ready for sale, Packing & delivery |
 | `production-timelines-1` … `-4` | How We Produce · growing periods | Broilers, Noilers, Layers & eggs, Turkeys |
+| `shop-prepared-1` … `-4` | Prepared Meat section | Whole dressed chicken, Chicken cuts, Roasted & grilled, Dressed turkey & noiler |
 | `shop-guide-1` … `-3` | Our Products · buying guide | Right weight, Order ahead, Store it right |
 | `bulk-buyers-1` … `-6` | Bulk Orders · who we supply | Hotels, Restaurants, Caterers, Supermarkets, Institutions, Distributors |
 | `contact-help-1` … `-3` | Contact · help cards | Shop online, Bulk & wholesale, Track an order |

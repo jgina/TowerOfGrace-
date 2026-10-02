@@ -6,7 +6,7 @@ import ImageCardGrid from '../components/ImageCardGrid';
 import { InfoTable } from '../components/InfoBlocks';
 import CtaBand from '../components/CtaBand';
 import { useContent } from '../context/ContentContext';
-import { PAGE_IMAGES, PRODUCTION_STEP_IMAGES, PRODUCT_LINE_IMAGES, withFallback } from '../assets/images';
+import { PAGE_IMAGES, cardImage, withFallback } from '../assets/images';
 import { slotImage, slotHint } from '../assets/siteImages';
 import './HowWeProducePage.css';
 
@@ -24,12 +24,12 @@ export default function HowWeProducePage() {
           <ol className="produce-steps">
             {production.steps?.map((step, index) => {
               const slot = `production-steps-${index + 1}`;
-              const image = slotImage(step.image, slot, PRODUCTION_STEP_IMAGES[index]);
+              const image = slotImage(step.image, slot, cardImage('production-steps', index));
               return (
                 <li key={`${step.title}-${index}`} className="produce-step">
                   <span className="produce-step__num">{String(index + 1).padStart(2, '0')}</span>
                   <div className="produce-step__card">
-                    <SmartImage src={image?.url} alt={image?.alt || step.title} width={700} ratio="16 / 10" label={step.title} hint={slotHint(slot)} />
+                    <SmartImage src={image?.url} alt={image?.alt || step.title} width={700} ratio="16 / 10" label={step.title} hint={slotHint(slot)} fit={image?.fit || 'cover'} />
                     <div className="produce-step__body">
                       <h2>{step.title}</h2>
                       <p className="prose">{step.text}</p>
@@ -46,7 +46,7 @@ export default function HowWeProducePage() {
         <section className="section">
           <div className="container">
             <SectionHeading eyebrow={timelines.eyebrow} title={timelines.title} text={timelines.text} />
-            <ImageCardGrid items={timelines.items} slotPrefix="production-timelines" bundled={PRODUCT_LINE_IMAGES} columns={4} ratio="4 / 3" />
+            <ImageCardGrid items={timelines.items} slotPrefix="production-timelines" columns={4} ratio="4 / 3" />
           </div>
         </section>
       )}

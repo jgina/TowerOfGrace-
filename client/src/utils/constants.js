@@ -121,7 +121,18 @@ export const FED_TO = {
   GROUP: 'Pen / group',
 };
 
+// How prepared meat from a processing run is kept, with the default shelf life used for its use-by date.
+export const MEAT_STORAGE = {
+  CHILLED: { label: 'Chilled', days: 3, tone: 'info', hint: '0–4 °C · about 3 days' },
+  FROZEN: { label: 'Frozen', days: 90, tone: 'neutral', hint: '−18 °C · about 3 months' },
+  READY_TO_EAT: { label: 'Ready to eat', days: 1, tone: 'accent', hint: 'Cooked · sell the same day' },
+};
+
+// Categories that are not live birds: no flock batches, no feeding.
+export const NOT_LIVE_BIRDS = ['eggs', 'prepared-meat'];
+export const isLiveBirds = (slug) => !NOT_LIVE_BIRDS.includes(slug);
+
 export const lossReasonsFor = (categorySlug) => {
-  const kind = categorySlug === 'eggs' ? 'eggs' : 'birds';
+  const kind = categorySlug === 'eggs' ? 'eggs' : categorySlug === 'prepared-meat' ? 'meat' : 'birds';
   return Object.entries(LOSS_REASONS).filter(([, r]) => r.for === 'any' || r.for === kind);
 };

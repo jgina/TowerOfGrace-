@@ -4,7 +4,7 @@ import FormField from './FormField';
 import useFetch from '../hooks/useFetch';
 import { adminService } from '../services/adminService';
 import { useToast } from '../context/ToastContext';
-import { TYPICAL_TARGET_DAYS } from '../utils/constants';
+import { TYPICAL_TARGET_DAYS, isLiveBirds } from '../utils/constants';
 import { formatDate, toDateInput } from '../utils/format';
 
 const today = () => new Date().toISOString().slice(0, 10);
@@ -33,7 +33,7 @@ export default function BatchFormModal({ open, onClose, onSaved, batch }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const categories = useFetch(() => (open ? adminService.listCategories() : Promise.resolve([])), [open]);
-  const birdCategories = (categories.data || []).filter((c) => c.slug !== 'eggs');
+  const birdCategories = (categories.data || []).filter((c) => isLiveBirds(c.slug));
 
   useEffect(() => {
     if (!open) return;

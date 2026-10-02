@@ -7,7 +7,7 @@ import FeatureGrid from '../components/FeatureGrid';
 import ImageCardGrid from '../components/ImageCardGrid';
 import CtaBand from '../components/CtaBand';
 import { useContent } from '../context/ContentContext';
-import { PAGE_IMAGES, PRODUCT_LINE_IMAGES, withFallback } from '../assets/images';
+import { PAGE_IMAGES, withFallback } from '../assets/images';
 import './AboutPage.css';
 
 export default function AboutPage() {
@@ -43,7 +43,7 @@ export default function AboutPage() {
         <section className="section">
           <div className="container">
             <SectionHeading eyebrow={services.eyebrow} title={services.title} text={services.text} />
-            <ImageCardGrid items={services.items} slotPrefix="about-services" bundled={PRODUCT_LINE_IMAGES} columns={3} />
+            <ImageCardGrid items={services.items} slotPrefix="about-services" columns={3} />
           </div>
         </section>
       )}

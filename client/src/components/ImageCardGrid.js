@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import { ArrowRight, Check } from 'lucide-react';
 import SmartImage from './SmartImage';
 import { slotImage, slotHint } from '../assets/siteImages';
+import { cardImage } from '../assets/images';
 import './ImageCardGrid.css';
 
 // "points" is edited in the CMS as one point per line; older data may already be an array.
@@ -12,19 +13,19 @@ export const toPoints = (points) => (Array.isArray(points) ? points : String(poi
  * Each card's picture comes from its image slot `${slotPrefix}-${n}` (see assets/siteImages.js),
  * so photos can be uploaded by an admin or added to the codebase later.
  */
-export default function ImageCardGrid({ items = [], slotPrefix, bundled = [], columns = 3, ratio = '4 / 3', variant = 'light', numbered = false }) {
+export default function ImageCardGrid({ items = [], slotPrefix, bundled, columns = 3, ratio = '4 / 3', variant = 'light', numbered = false }) {
   if (!items.length) return null;
   return (
     <div className={`image-cards image-cards--${variant}`} style={{ '--cols': columns }}>
       {items.map((item, index) => {
         const slot = slotPrefix ? `${slotPrefix}-${index + 1}` : undefined;
-        const image = slotImage(item.image, slot, bundled[index]);
+        const image = slotImage(item.image, slot, bundled ? bundled[index] : cardImage(slotPrefix, index));
         const points = toPoints(item.points);
         const internal = item.link?.startsWith('/');
         return (
           <article key={`${item.title}-${index}`} className="image-card">
             <div className="image-card__media">
-              <SmartImage src={image?.url} alt={image?.alt || item.title} width={800} ratio={ratio} label={item.title} hint={slotHint(slot)} />
+              <SmartImage src={image?.url} alt={image?.alt || item.title} width={800} ratio={ratio} label={item.title} hint={slotHint(slot)} fit={image?.fit || 'cover'} />
               {numbered && <span className="image-card__num">{String(index + 1).padStart(2, '0')}</span>}
               {item.tag && <span className="image-card__tag">{item.tag}</span>}
             </div>

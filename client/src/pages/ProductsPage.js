@@ -6,6 +6,7 @@ import MediaSplit from '../components/MediaSplit';
 import SectionHeading from '../components/SectionHeading';
 import ImageCardGrid from '../components/ImageCardGrid';
 import { InfoTable } from '../components/InfoBlocks';
+import PreparedMeatSection from '../components/PreparedMeatSection';
 import CtaBand from '../components/CtaBand';
 import { PageLoader, ErrorState } from '../components/Loader';
 import useFetch from '../hooks/useFetch';
@@ -57,6 +58,8 @@ export default function ProductsPage() {
           )}
         </div>
       </section>
+
+      <PreparedMeatSection />
 
       {guide?.items?.length > 0 && (
         <section className="section">

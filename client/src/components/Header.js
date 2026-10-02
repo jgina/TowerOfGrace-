@@ -13,6 +13,7 @@ const PRODUCT_LINKS = [
   { to: '/products/noilers', label: 'Noilers' },
   { to: '/products/eggs', label: 'Eggs' },
   { to: '/products/turkeys', label: 'Turkeys' },
+  { to: '/products/prepared-meat', label: 'Prepared Meat' },
 ];
 
 const COMPANY_LINKS = [

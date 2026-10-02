@@ -10,7 +10,7 @@ import CtaBand from '../components/CtaBand';
 import useFetch from '../hooks/useFetch';
 import { siteService } from '../services/siteService';
 import { useContent } from '../context/ContentContext';
-import { DEFAULT_GALLERY, FARM_SECTION_IMAGES, PAGE_IMAGES, withFallback } from '../assets/images';
+import { DEFAULT_GALLERY, PAGE_IMAGES, cardImage, withFallback } from '../assets/images';
 import { slotImage, slotHint } from '../assets/siteImages';
 import './OurFarmPage.css';
 
@@ -42,7 +42,7 @@ export default function OurFarmPage() {
               return (
                 <MediaSplit
                   key={`${section.title}-${index}`}
-                  image={slotImage(section.image, slot, FARM_SECTION_IMAGES[index])}
+                  image={slotImage(section.image, slot, cardImage('farm-sections', index))}
                   imageLabel={section.title}
                   imageHint={slotHint(slot)}
                   eyebrow={`Farm area ${String(index + 1).padStart(2, '0')}`}

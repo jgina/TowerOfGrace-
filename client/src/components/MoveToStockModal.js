@@ -5,6 +5,7 @@ import FormField from './FormField';
 import useFetch from '../hooks/useFetch';
 import { adminService } from '../services/adminService';
 import { useToast } from '../context/ToastContext';
+import { isLiveBirds } from '../utils/constants';
 import './NewMarketTripModal.css'; // shared line-item layout (.trip-form, .trip-lines, .trip-line)
 import './MoveToStockModal.css';
 
@@ -22,9 +23,10 @@ export default function MoveToStockModal({ open, onClose, batch, onDone }) {
   const [error, setError] = useState('');
   const products = useFetch(() => (open ? adminService.listProducts({ limit: 100 }).then((r) => r.products) : Promise.resolve([])), [open]);
 
-  // Offer products of the batch's own category first; any bird product is allowed.
+  // Offer products of the batch's own category first; any live-bird product is allowed.
+  // (Prepared meat is produced through Meat Processing, which records the run.)
   const options = (products.data || [])
-    .filter((p) => p.category?.slug !== 'eggs')
+    .filter((p) => isLiveBirds(p.category?.slug))
     .sort((a, b) => (b.category?.slug === batch?.categorySlug) - (a.category?.slug === batch?.categorySlug));
 
   useEffect(() => {

@@ -1,7 +1,7 @@
 import { Suspense, useEffect, useState } from 'react';
 import { Link, NavLink, Outlet, useLocation } from 'react-router-dom';
 import {
-  LayoutDashboard, FileSpreadsheet, Bird, Wheat, Package, Tags, Warehouse, Skull, Truck, ShoppingBag, Users, Building2, Mail, FileText, Images, Award, Settings,
+  LayoutDashboard, FileSpreadsheet, Bird, Wheat, Beef, Package, Tags, Warehouse, Skull, Truck, ShoppingBag, Users, Building2, Mail, FileText, Images, Award, Settings,
   Menu, X, ExternalLink, LogOut,
 } from 'lucide-react';
 import Logo from '../components/Logo';
@@ -26,6 +26,7 @@ const NAV = [
       { to: '/admin/categories', label: 'Categories', icon: Tags },
       { to: '/admin/batches', label: 'Flock Batches', icon: Bird },
       { to: '/admin/feeds', label: 'Feed Store', icon: Wheat },
+      { to: '/admin/processing', label: 'Meat Processing', icon: Beef },
       { to: '/admin/inventory', label: 'Inventory', icon: Warehouse },
       { to: '/admin/market-trips', label: 'Market Trips', icon: Truck },
       { to: '/admin/losses', label: 'Mortality & Losses', icon: Skull },

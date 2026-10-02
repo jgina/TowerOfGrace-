@@ -1,16 +1,17 @@
 import { Link } from 'react-router-dom';
-import { ArrowRight, Bird, Egg, Feather, HeartPulse, ShieldCheck, Truck, Handshake, Drumstick, Building2, ShoppingBasket } from 'lucide-react';
+import { ArrowRight, Bird, Egg, Feather, HeartPulse, ShieldCheck, Truck, Handshake, Drumstick, Building2, ShoppingBasket, UtensilsCrossed } from 'lucide-react';
 import SEO, { useOrganizationJsonLd } from '../components/SEO';
 import SectionHeading from '../components/SectionHeading';
 import SmartImage, { cloudinaryUrl } from '../components/SmartImage';
 import ProductCard, { ProductCardSkeleton } from '../components/ProductCard';
 import FeatureGrid from '../components/FeatureGrid';
 import ImageCardGrid from '../components/ImageCardGrid';
+import PreparedMeatSection from '../components/PreparedMeatSection';
 import { useContent } from '../context/ContentContext';
 import useFetch from '../hooks/useFetch';
 import { catalogService } from '../services/catalogService';
 import { siteService } from '../services/siteService';
-import { DEFAULT_GALLERY, PAGE_IMAGES, PRODUCTION_STEP_IMAGES, categoryImage, withFallback } from '../assets/images';
+import { DEFAULT_GALLERY, PAGE_IMAGES, categoryImage, withFallback } from '../assets/images';
 import './HomePage.css';
 
 const wordCount = (text = '') => text.split(/\s+/).filter(Boolean).length;
@@ -40,7 +41,7 @@ function RevealWords({ text = '', delay = 0, className = '' }) {
   );
 }
 
-const CATEGORY_ICONS ={ broilers: Drumstick, noilers: Bird, eggs: Egg, turkeys: Feather };
+const CATEGORY_ICONS = { broilers: Drumstick, noilers: Bird, eggs: Egg, turkeys: Feather, 'prepared-meat': UtensilsCrossed };
 const PILLAR_ICONS = [HeartPulse, ShieldCheck, Truck, Handshake];
 
 export default function HomePage() {
@@ -145,7 +146,7 @@ export default function HomePage() {
                   <h3>{category.name}</h3>
                   {category.description && <p>{category.description}</p>}
                   <span className="category-card__cta">
-                    Shop {category.name} <ArrowRight />
+                    {category.name.length > 10 ? 'Shop now' : `Shop ${category.name}`} <ArrowRight />
                   </span>
                 </div>
               </Link>
@@ -180,7 +181,7 @@ export default function HomePage() {
                 </Link>
               }
             />
-            <ImageCardGrid items={journey.items} slotPrefix="home-journey" bundled={PRODUCTION_STEP_IMAGES} columns={4} variant="dark" numbered />
+            <ImageCardGrid items={journey.items} slotPrefix="home-journey" columns={4} variant="dark" numbered />
           </div>
         </section>
       )}
@@ -221,6 +222,9 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+
+      {/* ---------- Prepared meat ---------- */}
+      <PreparedMeatSection />
 
       {/* ---------- Who we serve ---------- */}
       {audience?.items?.length > 0 && (

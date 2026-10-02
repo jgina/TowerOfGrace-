@@ -5,6 +5,7 @@ const asyncHandler = require('../utils/asyncHandler');
 const pick = require('../utils/pick');
 const { getPagination, buildMeta } = require('../utils/pagination');
 const { changeFeedStock, averageDailyUsage, checkLowStock, round2 } = require('../services/feedService');
+const { NOT_LIVE_BIRDS } = require('../utils/categoryKinds');
 
 const FIELDS = ['name', 'brand', 'feedType', 'bagSizeKg', 'lowStockBags', 'notes', 'isActive'];
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -138,10 +139,10 @@ exports.recordPurchase = asyncHandler(async (req, res) => {
   res.status(201).json({ success: true, feed, message: `${quantity} bag(s) of ${feed.name} added — ${feed.stockBags} now in store` });
 });
 
-// Bird products in the main stock (every category except eggs).
+// Live-bird products in the main stock (not eggs, not prepared meat).
 async function birdProducts(ids) {
-  const eggCats = await Category.find({ slug: 'eggs' }).select('_id').lean();
-  const filter = { category: { $nin: eggCats.map((c) => c._id) } };
+  const notBirds = await Category.find({ slug: { $in: NOT_LIVE_BIRDS } }).select('_id').lean();
+  const filter = { category: { $nin: notBirds.map((c) => c._id) } };
   if (ids) filter._id = { $in: ids };
   else filter.isActive = true;
   return Product.find(filter).select('name availableStock').sort({ name: 1 }).lean();

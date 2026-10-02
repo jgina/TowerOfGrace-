@@ -1,6 +1,6 @@
 import { Link, useNavigate } from 'react-router-dom';
 import {
-  Package, ShoppingBag, Users, Wallet, Clock, CheckCircle2, AlertTriangle, PackageX, Plus, Building2, Mail, ArrowRight, Skull, Egg, Receipt, Truck, Store, Bird, BellRing, Wheat,
+  Package, ShoppingBag, Users, Wallet, Clock, CheckCircle2, AlertTriangle, PackageX, Plus, Building2, Mail, ArrowRight, Skull, Egg, Receipt, Truck, Store, Bird, BellRing, Wheat, Beef,
 } from 'lucide-react';
 import AdminPageHeader from '../../components/AdminPageHeader';
 import AdminStatsCard from '../../components/AdminStatsCard';
@@ -45,11 +45,16 @@ export default function AdminDashboardPage() {
         }
       />
 
-      {(stats.newBulkRequests > 0 || stats.newMessages > 0 || stats.receiptsToReview > 0 || stats.batchesReady > 0 || stats.lowFeeds?.length > 0) && (
+      {(stats.newBulkRequests > 0 || stats.newMessages > 0 || stats.receiptsToReview > 0 || stats.batchesReady > 0 || stats.lowFeeds?.length > 0 || stats.meatExpiring > 0) && (
         <div className="dash-alerts">
           {stats.lowFeeds?.length > 0 && (
             <Link to="/admin/feeds" className="dash-alert dash-alert--danger">
               <Wheat aria-hidden="true" /> Low feed: {stats.lowFeeds.map((f) => `${f.name} (${f.stockBags} bags)`).join(', ')} <ArrowRight />
+            </Link>
+          )}
+          {stats.meatExpiring > 0 && (
+            <Link to="/admin/processing" className="dash-alert dash-alert--danger">
+              <Beef aria-hidden="true" /> Prepared meat from {stats.meatExpiring} processing run{stats.meatExpiring === 1 ? '' : 's'} near its use-by date <ArrowRight />
             </Link>
           )}
           {stats.batchesReady > 0 && (
@@ -92,6 +97,14 @@ export default function AdminDashboardPage() {
           value={`${stats.feedBags ?? 0} bags`}
           to="/admin/feeds"
           hint={stats.lowFeeds?.length ? `${stats.lowFeeds.length} feed(s) low` : 'All feeds above alert level'}
+        />
+        <AdminStatsCard
+          tone={stats.meatExpiring ? 'red' : 'dark'}
+          icon={Beef}
+          label="Prepared Meat in Stock"
+          value={`${stats.meatInStock ?? 0} units`}
+          to="/admin/processing"
+          hint={stats.meatExpiring ? `${stats.meatExpiring} run(s) near use-by` : `${stats.birdsProcessed30d ?? 0} birds processed (30 days)`}
         />
         <AdminStatsCard icon={Bird} label="Birds Growing" value={stats.birdsGrowing} to="/admin/batches" hint="In flock batches, not yet in stock" />
         <AdminStatsCard tone="amber" icon={BellRing} label="Batches Ready" value={stats.batchesReady} to="/admin/batches?status=READY" hint="Waiting for confirmation" />

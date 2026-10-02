@@ -146,7 +146,8 @@
   color: var(--color-info);
 }
 
-.notif__item--feed_low .notif__icon {
+.notif__item--feed_low .notif__icon,
+.notif__item--meat_expiry .notif__icon {
   background: var(--color-danger-bg);
   color: var(--color-danger);
 }

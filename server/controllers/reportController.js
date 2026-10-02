@@ -1,6 +1,7 @@
-const { Order, MarketTrip, StockLoss, StockMovement, Product, User, BulkOrder, Content } = require('../models');
+const { Order, MarketTrip, StockLoss, StockMovement, Product, User, BulkOrder, Content, ProcessingRun } = require('../models');
 const ApiError = require('../utils/ApiError');
 const asyncHandler = require('../utils/asyncHandler');
+const { isLiveBirds } = require('../utils/categoryKinds');
 
 const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 const key = (productId, variantId) => `${productId}:${variantId || ''}`;
@@ -67,6 +68,7 @@ async function buildStockStatement(start, end) {
         onlineSales: 0, // ORDER_SALE + ORDER_RESTOCK (net, shown as outflow)
         marketOut: 0,
         marketReturn: 0,
+        processing: 0, // PROCESSING_IN − PROCESSING_OUT: birds processed out, prepared meat produced in
         losses: 0,
       });
     }
@@ -108,6 +110,10 @@ async function buildStockStatement(start, end) {
       case 'LOSS':
         line.losses -= m.qty;
         break;
+      case 'PROCESSING_IN':
+      case 'PROCESSING_OUT':
+        line.processing += m.qty;
+        break;
       default:
         line.added += m.qty; // OPENING, ADJUSTMENT, LOSS_REVERSAL
     }
@@ -116,7 +122,7 @@ async function buildStockStatement(start, end) {
   const rows = [...lines.values()]
     .map((l) => {
       const closing = l.current - l.after;
-      const net = l.added - l.onlineSales - l.marketOut + l.marketReturn - l.losses;
+      const net = l.added + l.processing - l.onlineSales - l.marketOut + l.marketReturn - l.losses;
       return {
         productName: l.productName,
         variantLabel: l.variantLabel,
@@ -126,11 +132,12 @@ async function buildStockStatement(start, end) {
         onlineSales: l.onlineSales,
         marketOut: l.marketOut,
         marketReturn: l.marketReturn,
+        processing: l.processing,
         losses: l.losses,
         closing,
       };
     })
-    .filter((r) => r.opening || r.closing || r.added || r.onlineSales || r.marketOut || r.marketReturn || r.losses)
+    .filter((r) => r.opening || r.closing || r.added || r.processing || r.onlineSales || r.marketOut || r.marketReturn || r.losses)
     .sort((a, b) => (a.categoryName || '').localeCompare(b.categoryName || '') || a.productName.localeCompare(b.productName));
 
   const totals = rows.reduce(
@@ -140,7 +147,7 @@ async function buildStockStatement(start, end) {
       });
       return t;
     },
-    { opening: 0, added: 0, onlineSales: 0, marketOut: 0, marketReturn: 0, losses: 0, closing: 0 }
+    { opening: 0, added: 0, processing: 0, onlineSales: 0, marketOut: 0, marketReturn: 0, losses: 0, closing: 0 }
   );
 
   return { rows, totals, ledgerStartedAt: firstMovement?.at || null };
@@ -153,7 +160,7 @@ exports.getStatement = asyncHandler(async (req, res) => {
   const { start, end } = period;
   const inPeriod = { $gte: start, $lte: end };
 
-  const [paidOrders, periodOrders, trips, losses, stock, newCustomers, bulkRequests, contentDocs] = await Promise.all([
+  const [paidOrders, periodOrders, trips, losses, stock, newCustomers, bulkRequests, contentDocs, runs] = await Promise.all([
     Order.find({ paymentStatus: 'PAID', paidAt: inPeriod }).sort({ paidAt: 1 }).lean(),
     Order.find({ createdAt: inPeriod }).select('orderNumber orderStatus paymentStatus paymentMethod total createdAt').lean(),
     MarketTrip.find({ tripDate: inPeriod }).sort({ tripDate: 1 }).lean(),
@@ -162,6 +169,7 @@ exports.getStatement = asyncHandler(async (req, res) => {
     User.countDocuments({ role: 'customer', createdAt: inPeriod }),
     BulkOrder.countDocuments({ createdAt: inPeriod }),
     Content.find({ key: { $in: ['contact', 'settings'] } }).lean(),
+    ProcessingRun.find({ processedOn: inPeriod, status: 'COMPLETED' }).sort({ processedOn: 1 }),
   ]);
 
   const content = Object.fromEntries(contentDocs.map((d) => [d.key, d.data || {}]));
@@ -258,7 +266,7 @@ exports.getStatement = asyncHandler(async (req, res) => {
       return acc;
     }, {})
   ).map(([reason, units]) => ({ reason, units }));
-  const birdsLost = losses.filter((l) => l.categorySlug !== 'eggs').reduce((s, l) => s + l.quantity, 0);
+  const birdsLost = losses.filter((l) => isLiveBirds(l.categorySlug)).reduce((s, l) => s + l.quantity, 0);
   const eggsLost = losses.filter((l) => l.categorySlug === 'eggs').reduce((s, l) => s + l.quantity, 0);
 
   // Month-by-month for annual statements.
@@ -288,6 +296,35 @@ exports.getStatement = asyncHandler(async (req, res) => {
       r.total = round2(r.online + r.market);
     });
   }
+
+  // Meat processing.
+  const processingRuns = runs.map((r) => {
+    const f = r.figures();
+    return {
+      runNumber: r.runNumber,
+      date: r.processedOn,
+      source: r.sourceName,
+      birdsIn: r.birdsIn,
+      condemned: r.condemned || 0,
+      liveWeightKg: r.liveWeightKg || null,
+      dressedKg: f.dressedKg,
+      yieldPct: f.yieldPct,
+      unitsOut: f.unitsOut,
+      products: r.outputs.map((o) => `${o.quantity} × ${o.productName}${o.variantLabel ? ` (${o.variantLabel})` : ''}`).join(', '),
+      processingCost: r.processingCost || 0,
+    };
+  });
+  const yieldRuns = processingRuns.filter((r) => r.liveWeightKg && r.dressedKg);
+  const yieldLive = yieldRuns.reduce((s, r) => s + r.liveWeightKg, 0);
+  const processingTotals = {
+    runs: processingRuns.length,
+    birdsIn: processingRuns.reduce((s, r) => s + r.birdsIn, 0),
+    condemned: processingRuns.reduce((s, r) => s + r.condemned, 0),
+    unitsOut: processingRuns.reduce((s, r) => s + r.unitsOut, 0),
+    dressedKg: round2(processingRuns.reduce((s, r) => s + (r.dressedKg || 0), 0)),
+    processingCost: round2(processingRuns.reduce((s, r) => s + r.processingCost, 0)),
+    yieldPct: yieldLive ? Math.round((yieldRuns.reduce((s, r) => s + r.dressedKg, 0) / yieldLive) * 1000) / 10 : null,
+  };
 
   const unitsSoldOnline = paidOrders.reduce((s, o) => s + o.items.reduce((x, i) => x + i.quantity, 0), 0);
   const unitsSoldMarket = closedTrips.reduce((s, t) => s + tripTotals(t).sold, 0);
@@ -320,6 +357,8 @@ exports.getStatement = asyncHandler(async (req, res) => {
         marketTrips: trips.length,
         birdsLost,
         eggsLost,
+        meatLost: losses.filter((l) => l.categorySlug === 'prepared-meat').reduce((s, l) => s + l.quantity, 0),
+        birdsProcessed: processingTotals.birdsIn,
         newCustomers,
         bulkRequests,
       },
@@ -337,6 +376,7 @@ exports.getStatement = asyncHandler(async (req, res) => {
         reference: l.tripNumber,
       })),
       lossByReason,
+      processing: { runs: processingRuns, totals: processingTotals },
       marketTrips: trips.map((t) => ({ tripNumber: t.tripNumber, date: t.tripDate, market: t.market, status: t.status, responsiblePerson: t.responsiblePerson, ...tripTotals(t) })),
       ordersByStatus: countBy('orderStatus'),
       ordersByPayment: countBy('paymentMethod'),
