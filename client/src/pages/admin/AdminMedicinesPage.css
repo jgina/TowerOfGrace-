@@ -1,0 +1,181 @@
+/* Medicine store: builds on the feed store layout (AdminFeedsPage.css). */
+
+/* ---------- Expired drugs ---------- */
+
+.med-expired {
+  margin-bottom: var(--space-5);
+  border: 1px solid #f3c3bd;
+  border-left: 5px solid var(--color-danger);
+  border-radius: var(--radius-md);
+  background: var(--color-danger-bg);
+}
+
+.med-expired header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-4) var(--space-5) var(--space-3);
+}
+
+.med-expired header > svg {
+  width: 26px;
+  height: 26px;
+  flex-shrink: 0;
+  color: var(--color-danger);
+}
+
+.med-expired header div {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: var(--text-sm);
+  color: #8e2a20;
+}
+
+.med-expired ul {
+  list-style: none;
+  margin: 0;
+  padding: 0 var(--space-5) var(--space-3);
+}
+
+.med-expired li {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr) auto;
+  align-items: center;
+  gap: var(--space-4);
+  padding: var(--space-2) 0;
+  font-size: var(--text-sm);
+}
+
+.med-expired li + li {
+  border-top: 1px dashed #f3c3bd;
+}
+
+.med-expired__name {
+  font-weight: var(--weight-bold);
+}
+
+.med-expired__actions {
+  display: flex;
+  gap: var(--space-2);
+}
+
+/* ---------- Birds on withdrawal ---------- */
+
+.med-withdrawal {
+  margin-bottom: var(--space-5);
+  border: 1px solid var(--brand-amber-300);
+  border-left: 5px solid var(--brand-amber-600);
+  border-radius: var(--radius-md);
+  background: var(--brand-amber-100);
+}
+
+.med-withdrawal header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-4) var(--space-5) var(--space-3);
+}
+
+.med-withdrawal header > svg {
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+  color: var(--brand-amber-700);
+}
+
+.med-withdrawal header div {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: var(--text-sm);
+}
+
+.med-withdrawal header span {
+  color: var(--color-text-muted);
+}
+
+.med-withdrawal ul {
+  list-style: none;
+  margin: 0;
+  padding: 0 var(--space-5) var(--space-3);
+}
+
+.med-withdrawal li {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr) auto;
+  align-items: center;
+  gap: var(--space-4);
+  padding: var(--space-2) 0;
+  font-size: var(--text-sm);
+}
+
+.med-withdrawal li + li {
+  border-top: 1px dashed var(--brand-amber-300);
+}
+
+.med-withdrawal__who {
+  font-weight: var(--weight-bold);
+}
+
+.med-withdrawal__meds {
+  color: var(--color-text-muted);
+}
+
+.med-withdrawal__until {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  text-align: right;
+}
+
+.med-withdrawal__until strong {
+  color: var(--brand-amber-700);
+}
+
+.med-withdrawal__until small {
+  font-size: var(--text-xs);
+  color: var(--color-text-subtle);
+}
+
+/* ---------- Medicine cards ---------- */
+
+.med-card.is-expiring:not(.is-low) {
+  border-top-color: var(--brand-amber-600);
+}
+
+.med-card__storage {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin: 0;
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+}
+
+.med-card__storage svg {
+  width: 13px;
+  height: 13px;
+  flex-shrink: 0;
+  color: var(--brand-green-600);
+}
+
+.med-card .feed-card__actions {
+  flex-wrap: wrap;
+}
+
+@media (max-width: 640px) {
+  .med-expired li {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-1);
+  }
+
+  .med-withdrawal li {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .med-withdrawal__meds {
+    grid-column: 1 / -1;
+    grid-row: 2;
+  }
+}

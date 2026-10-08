@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { Pencil, PackagePlus, HeartCrack, Scale, Lock, BellRing, Wheat, Beef } from 'lucide-react';
+import { Pencil, PackagePlus, HeartCrack, Scale, Lock, BellRing, Wheat, Beef, Syringe, ShieldAlert } from 'lucide-react';
 import { FeedUsageModal } from '../../components/FeedModals';
+import { TreatmentModal } from '../../components/MedicineModals';
 import AdminPageHeader from '../../components/AdminPageHeader';
 import StatusBadge from '../../components/StatusBadge';
 import BatchStageBar from '../../components/BatchStageBar';
@@ -16,7 +17,7 @@ import { PageLoader, ErrorState } from '../../components/Loader';
 import useFetch from '../../hooks/useFetch';
 import { adminService } from '../../services/adminService';
 import { useToast } from '../../context/ToastContext';
-import { BATCH_STAGES, LOSS_REASONS, lossReasonsFor } from '../../utils/constants';
+import { BATCH_STAGES, LOSS_REASONS, lossReasonsFor, TREATMENT_PURPOSES, TREATMENT_ROUTES, unitShort } from '../../utils/constants';
 import { formatCurrency, formatDate, formatDateTime } from '../../utils/format';
 import './AdminBatchDetailsPage.css';
 
@@ -38,6 +39,9 @@ export default function AdminBatchDetailsPage() {
   const [processing, setProcessing] = useState(false);
   const feedUsage = useFetch(() => adminService.batchFeedUsage(id), [id]);
   const feedStore = useFetch(() => adminService.listFeeds(), []);
+  const [treating, setTreating] = useState(false);
+  const treatments = useFetch(() => adminService.batchTreatments(id), [id]);
+  const medicineStore = useFetch(() => adminService.listMedicines(), []);
 
   if (loading) return <PageLoader label="Loading batch…" />;
   if (error) return <ErrorState message={error} onRetry={reload} />;
@@ -404,6 +408,62 @@ export default function AdminBatchDetailsPage() {
         </div>
       </section>
 
+      <section className="admin-card batch-feed batch-health">
+        <div className="admin-card__head">
+          <h2>
+            <Syringe aria-hidden="true" /> Health &amp; treatments
+          </h2>
+          {open && (
+            <button type="button" className="btn btn--outline btn--sm" onClick={() => setTreating(true)} disabled={!medicineStore.data?.medicines?.length}>
+              Record treatment
+            </button>
+          )}
+        </div>
+        <div className="admin-card__body">
+          {treatments.data?.withdrawalUntil && (
+            <div className="batch-withdrawal" role="alert">
+              <ShieldAlert aria-hidden="true" />
+              <span>
+                <strong>On a withdrawal period.</strong> Do not sell or slaughter these birds before <strong>{formatDate(treatments.data.withdrawalUntil)}</strong>.
+              </span>
+            </div>
+          )}
+          {treatments.data?.treatments?.length ? (
+            <ul className="batch-health__list">
+              {treatments.data.treatments.map((t) => (
+                <li key={t.treatmentId}>
+                  <span className="batch-health__date">
+                    {formatDate(t.date)}
+                    <small>day {ageOn(t.date)}</small>
+                  </span>
+                  <span>
+                    <strong>{[TREATMENT_PURPOSES[t.purpose], t.condition].filter(Boolean).join(' — ')}</strong>
+                    <small>
+                      {t.medicines.map((m) => `${m.name} (${m.quantity} ${unitShort(m.unit)}${m.dosage ? `, ${m.dosage}` : ''})`).join(' · ')}
+                    </small>
+                    <small>
+                      {[
+                        TREATMENT_ROUTES[t.route],
+                        t.birdsTreated ? `${t.birdsTreated} birds` : null,
+                        t.durationDays > 1 ? `${t.durationDays} days` : null,
+                        t.administeredBy ? `by ${t.administeredBy}` : null,
+                        t.withdrawalUntil ? `safe to sell from ${formatDate(t.withdrawalUntil)}` : null,
+                      ]
+                        .filter(Boolean)
+                        .join(' · ')}
+                    </small>
+                  </span>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="text-muted batch-small">
+              No vaccinations or medicines recorded for this batch yet. Use <strong>Record treatment</strong> in the Medicine Store (or the button here) and choose this batch.
+            </p>
+          )}
+        </div>
+      </section>
+
       <section className="admin-card batch-details">
         <dl>
           <div>
@@ -452,6 +512,16 @@ export default function AdminBatchDetailsPage() {
         onSaved={() => {
           feedUsage.reload();
           feedStore.reload();
+        }}
+      />
+      <TreatmentModal
+        open={treating}
+        medicines={medicineStore.data?.medicines || []}
+        presetBatchId={batch._id}
+        onClose={() => setTreating(false)}
+        onSaved={() => {
+          treatments.reload();
+          medicineStore.reload();
         }}
       />
       <Modal

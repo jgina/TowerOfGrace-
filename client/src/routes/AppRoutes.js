@@ -41,6 +41,7 @@ const AdminInventoryPage = lazy(() => import('../pages/admin/AdminInventoryPage'
 const AdminLossesPage = lazy(() => import('../pages/admin/AdminLossesPage'));
 const AdminBatchesPage = lazy(() => import('../pages/admin/AdminBatchesPage'));
 const AdminFeedsPage = lazy(() => import('../pages/admin/AdminFeedsPage'));
+const AdminMedicinesPage = lazy(() => import('../pages/admin/AdminMedicinesPage'));
 const AdminProcessingPage = lazy(() => import('../pages/admin/AdminProcessingPage'));
 const AdminProcessingDetailsPage = lazy(() => import('../pages/admin/AdminProcessingDetailsPage'));
 const AdminBatchDetailsPage = lazy(() => import('../pages/admin/AdminBatchDetailsPage'));
@@ -110,6 +111,7 @@ export default function AppRoutes() {
             <Route path="losses" element={<AdminLossesPage />} />
             <Route path="batches" element={<AdminBatchesPage />} />
             <Route path="feeds" element={<AdminFeedsPage />} />
+            <Route path="medicines" element={<AdminMedicinesPage />} />
             <Route path="processing" element={<AdminProcessingPage />} />
             <Route path="processing/:id" element={<AdminProcessingDetailsPage />} />
             <Route path="batches/:id" element={<AdminBatchDetailsPage />} />

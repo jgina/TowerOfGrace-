@@ -3,7 +3,7 @@ const { body } = require('express-validator');
 const validate = require('../middleware/validate');
 const { adminOnly } = require('../middleware/auth');
 const upload = require('../middleware/upload');
-const { Order, Gallery, StockLoss, FeedItem } = require('../models');
+const { Order, Gallery, StockLoss, FeedItem, MedicineItem, MedicineTransaction } = require('../models');
 const losses = require('../controllers/stockLossController');
 const notifications = require('../controllers/notificationController');
 const marketTrips = require('../controllers/marketTripController');
@@ -11,6 +11,7 @@ const processing = require('../controllers/processingController');
 const reports = require('../controllers/reportController');
 const batches = require('../controllers/flockBatchController');
 const feeds = require('../controllers/feedController');
+const medicines = require('../controllers/medicineController');
 const admin = require('../controllers/adminController');
 const products = require('../controllers/productController');
 const orders = require('../controllers/orderController');
@@ -196,6 +197,84 @@ router.post(
   '/feeds/:id/adjust',
   validate([body('note').trim().notEmpty().withMessage('Give a reason for the correction').isLength({ max: 500 }), body('date').optional({ values: 'falsy' }).isISO8601()]),
   feeds.adjustStock
+);
+
+// Medicine store — medicines and vaccines bought, treatments given (per batch / pen), withdrawal periods,
+// remaining stock, and low-stock and expiry alerts
+const medicineRules = [
+  body('name').optional().trim().notEmpty().withMessage('Medicine name is required').isLength({ max: 100 }),
+  body('brand').optional().trim().isLength({ max: 80 }),
+  body('category').optional().isIn(MedicineItem.CATEGORIES),
+  body('unit').optional().isIn(MedicineItem.UNITS),
+  body('unitSize').optional().trim().isLength({ max: 60 }),
+  body('activeIngredient').optional().trim().isLength({ max: 150 }),
+  body('lowStockUnits').optional().isFloat({ min: 0, max: 100000 }).withMessage('Alert level must be 0 or more'),
+  body('withdrawalDays').optional({ values: 'falsy' }).isInt({ min: 0, max: 365 }).withMessage('Withdrawal period must be 0–365 days'),
+  body('expiryDate').optional({ values: 'falsy' }).isISO8601().withMessage('Invalid expiry date'),
+  body('storage').optional().trim().isLength({ max: 150 }),
+  body('notes').optional().trim().isLength({ max: 500 }),
+  body('isActive').optional().isBoolean(),
+];
+router.get('/medicines', medicines.listMedicines);
+router.get('/medicines/transactions', medicines.listTransactions);
+router.get('/medicines/batch/:batchId', medicines.batchTreatments);
+router.post(
+  '/medicines',
+  validate([body('name').trim().notEmpty().withMessage('Medicine name is required'), body('openingUnits').optional({ values: 'falsy' }).isFloat({ min: 0 }), ...medicineRules]),
+  medicines.createMedicine
+);
+router.put('/medicines/:id', validate(medicineRules), medicines.updateMedicine);
+router.post(
+  '/medicines/treatments',
+  validate([
+    body('date').optional({ values: 'falsy' }).isISO8601().withMessage('Invalid date'),
+    body('givenTo').optional({ values: 'falsy' }).isIn(MedicineTransaction.GIVEN_TO).withMessage('Choose who was treated'),
+    body('batchId').optional({ values: 'falsy' }).isMongoId(),
+    body('productId').optional({ values: 'falsy' }).isMongoId(),
+    body('groupName').optional().trim().isLength({ max: 120 }),
+    body('purpose').optional({ values: 'falsy' }).isIn(MedicineTransaction.PURPOSES).withMessage('Choose the purpose'),
+    body('route').optional({ values: 'falsy' }).isIn(MedicineTransaction.ROUTES).withMessage('Choose how it was given'),
+    body('condition').optional().trim().isLength({ max: 150 }),
+    body('birdsTreated').optional({ values: 'falsy' }).isInt({ min: 0, max: 1000000 }).withMessage('Birds treated must be a whole number'),
+    body('durationDays').optional({ values: 'falsy' }).isInt({ min: 1, max: 60 }).withMessage('Days of treatment must be 1–60'),
+    body('administeredBy').optional().trim().isLength({ max: 120 }),
+    body('note').optional().trim().isLength({ max: 500 }),
+    body('lines').isArray({ min: 1, max: 20 }).withMessage('Add at least one medicine given'),
+    body('lines.*.medicineId').isMongoId().withMessage('Choose a medicine on every line'),
+    body('lines.*.quantity').isFloat({ gt: 0, max: 100000 }).withMessage('Quantity used must be more than 0'),
+    body('lines.*.dosage').optional().trim().isLength({ max: 150 }),
+    body('lines.*.withdrawalDays').optional({ values: 'falsy' }).isInt({ min: 0, max: 365 }).withMessage('Withdrawal period must be 0–365 days'),
+  ]),
+  medicines.recordTreatment
+);
+router.post(
+  '/medicines/:id/purchases',
+  validate([
+    body('quantity').isFloat({ gt: 0, max: 100000 }).withMessage('Quantity bought must be more than 0'),
+    body('costPerUnit').optional({ values: 'falsy' }).isFloat({ min: 0 }),
+    body('supplier').optional().trim().isLength({ max: 150 }),
+    body('lotNumber').optional().trim().isLength({ max: 60 }),
+    body('expiryDate').optional({ values: 'falsy' }).isISO8601().withMessage('Invalid expiry date'),
+    body('date').optional({ values: 'falsy' }).isISO8601().withMessage('Invalid date'),
+    body('note').optional().trim().isLength({ max: 500 }),
+  ]),
+  medicines.recordPurchase
+);
+router.post(
+  '/medicines/:id/adjust',
+  validate([body('note').trim().notEmpty().withMessage('Give a reason for the correction').isLength({ max: 500 }), body('date').optional({ values: 'falsy' }).isISO8601()]),
+  medicines.adjustStock
+);
+router.post(
+  '/medicines/:id/dispose',
+  validate([
+    body('quantity').isFloat({ gt: 0, max: 100000 }).withMessage('Quantity disposed must be more than 0'),
+    body('reason').optional({ values: 'falsy' }).isIn(MedicineTransaction.DISPOSAL_REASONS),
+    body('nextExpiryDate').optional({ values: 'falsy' }).isISO8601().withMessage('Invalid expiry date'),
+    body('date').optional({ values: 'falsy' }).isISO8601().withMessage('Invalid date'),
+    body('note').optional().trim().isLength({ max: 500 }),
+  ]),
+  medicines.disposeStock
 );
 
 // Market trips — stock taken to market, then reconciled as sold / returned / lost

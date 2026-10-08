@@ -107,4 +107,4 @@ async function checkLowStock(feed) {
   return true;
 }
 
-module.exports = { changeFeedStock, averageDailyUsage, checkLowStock, round2 };
+module.exports = { changeFeedStock, averageDailyUsage, checkLowStock, round2, alertRecipients: recipients };

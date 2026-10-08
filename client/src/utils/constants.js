@@ -121,6 +121,70 @@ export const FED_TO = {
   GROUP: 'Pen / group',
 };
 
+export const MEDICINE_CATEGORIES = {
+  VACCINE: 'Vaccine',
+  ANTIBIOTIC: 'Antibiotic',
+  ANTICOCCIDIAL: 'Anticoccidial',
+  DEWORMER: 'Dewormer',
+  VITAMIN: 'Vitamin / mineral',
+  ANTISTRESS: 'Anti-stress / electrolyte',
+  DISINFECTANT: 'Disinfectant',
+  OTHER: 'Other',
+};
+
+// How medicine is counted in the store: { label for a select, short label after a number }
+export const MEDICINE_UNITS = {
+  BOTTLE: { label: 'Bottle', short: 'bottle(s)' },
+  SACHET: { label: 'Sachet', short: 'sachet(s)' },
+  VIAL: { label: 'Vial', short: 'vial(s)' },
+  PACK: { label: 'Pack / box', short: 'pack(s)' },
+  TABLET: { label: 'Tablet', short: 'tablet(s)' },
+  ML: { label: 'Millilitre (ml)', short: 'ml' },
+  LITRE: { label: 'Litre', short: 'litre(s)' },
+  GRAM: { label: 'Gram (g)', short: 'g' },
+  KG: { label: 'Kilogram (kg)', short: 'kg' },
+  DOSE: { label: 'Dose', short: 'dose(s)' },
+};
+export const unitShort = (unit) => MEDICINE_UNITS[unit]?.short || 'unit(s)';
+
+export const MEDICINE_TX = {
+  OPENING: { label: 'Opening stock', tone: 'neutral' },
+  PURCHASE: { label: 'Purchase', tone: 'success' },
+  USAGE: { label: 'Given', tone: 'accent' },
+  ADJUSTMENT: { label: 'Stock count', tone: 'info' },
+  DISPOSAL: { label: 'Disposed', tone: 'danger' },
+};
+
+export const TREATMENT_PURPOSES = {
+  VACCINATION: 'Vaccination',
+  TREATMENT: 'Treatment of disease',
+  PREVENTION: 'Prevention',
+  SUPPLEMENT: 'Vitamins / supplement',
+  DEWORMING: 'Deworming',
+  DISINFECTION: 'Disinfection',
+  OTHER: 'Other',
+};
+
+export const TREATMENT_ROUTES = {
+  DRINKING_WATER: 'Drinking water',
+  FEED: 'In feed',
+  INJECTION: 'Injection',
+  EYE_DROP: 'Eye drop',
+  NASAL: 'Nasal drop',
+  SPRAY: 'Spray',
+  WING_WEB: 'Wing web',
+  ORAL: 'Oral (beak)',
+  TOPICAL: 'On the skin',
+  OTHER: 'Other',
+};
+
+export const DISPOSAL_REASONS = {
+  EXPIRED: 'Expired',
+  DAMAGED: 'Damaged / broken',
+  SPOILED: 'Spoiled (storage)',
+  OTHER: 'Other',
+};
+
 // How prepared meat from a processing run is kept, with the default shelf life used for its use-by date.
 export const MEAT_STORAGE = {
   CHILLED: { label: 'Chilled', days: 3, tone: 'info', hint: '0–4 °C · about 3 days' },

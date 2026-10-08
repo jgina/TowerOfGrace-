@@ -1,6 +1,6 @@
 import { Link, useNavigate } from 'react-router-dom';
 import {
-  Package, ShoppingBag, Users, Wallet, Clock, CheckCircle2, AlertTriangle, PackageX, Plus, Building2, Mail, ArrowRight, Skull, Egg, Receipt, Truck, Store, Bird, BellRing, Wheat, Beef,
+  Package, ShoppingBag, Users, Wallet, Clock, CheckCircle2, AlertTriangle, PackageX, Plus, Building2, Mail, ArrowRight, Skull, Egg, Receipt, Truck, Store, Bird, BellRing, Wheat, Beef, Pill, ShieldAlert, CalendarX,
 } from 'lucide-react';
 import AdminPageHeader from '../../components/AdminPageHeader';
 import AdminStatsCard from '../../components/AdminStatsCard';
@@ -45,11 +45,26 @@ export default function AdminDashboardPage() {
         }
       />
 
-      {(stats.newBulkRequests > 0 || stats.newMessages > 0 || stats.receiptsToReview > 0 || stats.batchesReady > 0 || stats.lowFeeds?.length > 0 || stats.meatExpiring > 0) && (
+      {(stats.newBulkRequests > 0 || stats.newMessages > 0 || stats.receiptsToReview > 0 || stats.batchesReady > 0 || stats.lowFeeds?.length > 0 || stats.meatExpiring > 0 || stats.lowMedicines?.length > 0 || stats.medicinesExpiring > 0 || stats.expiredMedicines?.length > 0) && (
         <div className="dash-alerts">
           {stats.lowFeeds?.length > 0 && (
             <Link to="/admin/feeds" className="dash-alert dash-alert--danger">
               <Wheat aria-hidden="true" /> Low feed: {stats.lowFeeds.map((f) => `${f.name} (${f.stockBags} bags)`).join(', ')} <ArrowRight />
+            </Link>
+          )}
+          {stats.expiredMedicines?.length > 0 && (
+            <Link to="/admin/medicines" className="dash-alert dash-alert--danger">
+              <CalendarX aria-hidden="true" /> Expired drugs in store — do not use: {stats.expiredMedicines.map((m) => m.name).join(', ')} <ArrowRight />
+            </Link>
+          )}
+          {stats.lowMedicines?.length > 0 && (
+            <Link to="/admin/medicines" className="dash-alert dash-alert--danger">
+              <Pill aria-hidden="true" /> Low medicine: {stats.lowMedicines.map((m) => `${m.name} (${m.stockUnits} left)`).join(', ')} <ArrowRight />
+            </Link>
+          )}
+          {stats.medicinesExpiring > 0 && (
+            <Link to="/admin/medicines" className="dash-alert dash-alert--danger">
+              <Pill aria-hidden="true" /> {stats.medicinesExpiring} medicine{stats.medicinesExpiring === 1 ? '' : 's'} expiring within 30 days <ArrowRight />
             </Link>
           )}
           {stats.meatExpiring > 0 && (
@@ -97,6 +112,34 @@ export default function AdminDashboardPage() {
           value={`${stats.feedBags ?? 0} bags`}
           to="/admin/feeds"
           hint={stats.lowFeeds?.length ? `${stats.lowFeeds.length} feed(s) low` : 'All feeds above alert level'}
+        />
+        <AdminStatsCard
+          tone={stats.expiredMedicines?.length || stats.lowMedicines?.length || stats.medicinesExpiring ? 'red' : 'green'}
+          icon={Pill}
+          label="Medicine Store"
+          value={
+            stats.expiredMedicines?.length || stats.lowMedicines?.length || stats.medicinesExpiring
+              ? `${(stats.expiredMedicines?.length || 0) + (stats.lowMedicines?.length || 0) + (stats.medicinesExpiring || 0)} alert(s)`
+              : 'OK'
+          }
+          to="/admin/medicines"
+          hint={
+            [
+              stats.expiredMedicines?.length ? `${stats.expiredMedicines.length} expired` : null,
+              stats.lowMedicines?.length ? `${stats.lowMedicines.length} low` : null,
+              stats.medicinesExpiring ? `${stats.medicinesExpiring} expiring` : null,
+            ]
+              .filter(Boolean)
+              .join(' · ') || 'Stock and expiry dates fine'
+          }
+        />
+        <AdminStatsCard
+          tone={stats.batchesUnderWithdrawal ? 'amber' : 'dark'}
+          icon={ShieldAlert}
+          label="Batches on Withdrawal"
+          value={stats.batchesUnderWithdrawal ?? 0}
+          to="/admin/medicines"
+          hint="Treated recently — not yet safe to sell"
         />
         <AdminStatsCard
           tone={stats.meatExpiring ? 'red' : 'dark'}

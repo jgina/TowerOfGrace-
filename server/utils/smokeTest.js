@@ -735,6 +735,132 @@ function scratchUri(uri) {
     assert.equal((await call('GET', `/admin/feeds/batch/${ready._id}`, null, adminToken)).body.totalBags, 3, 'a ready batch still tracks its own feed');
   });
 
+  await check('medicine store: purchases in, treatments out, withdrawal periods, low-stock and expiry alerts, disposal', async () => {
+    const DAY = 24 * 60 * 60 * 1000;
+    const isoDay = (offset) => new Date(Date.now() + offset * DAY).toISOString().slice(0, 10);
+    const created = await call(
+      'POST',
+      '/admin/medicines',
+      { name: 'Amoxicillin 20%', brand: 'Test Vet', category: 'ANTIBIOTIC', unit: 'SACHET', unitSize: '100 g', lowStockUnits: 3, withdrawalDays: 7, openingUnits: 6, expiryDate: isoDay(200) },
+      adminToken
+    );
+    assert.equal(created.status, 201, JSON.stringify(created.body));
+    const amox = created.body.medicine;
+    assert.equal(amox.stockUnits, 6);
+    assert.equal((await call('POST', '/admin/medicines', { name: 'amoxicillin 20%', brand: 'test vet' }, adminToken)).status, 409, 'the same medicine cannot be added twice');
+    const vaccine = (await call('POST', '/admin/medicines', { name: 'Gumboro Vaccine', category: 'VACCINE', unit: 'VIAL', lowStockUnits: 1, openingUnits: 4 }, adminToken)).body.medicine;
+
+    // A purchase with a sooner expiry becomes the store's expiry date; a later one does not.
+    const bought = await call('POST', `/admin/medicines/${amox._id}/purchases`, { quantity: 4, costPerUnit: 2500, supplier: 'Vet Shop', lotNumber: 'L-1', expiryDate: isoDay(100) }, adminToken);
+    assert.equal(bought.status, 201, JSON.stringify(bought.body));
+    assert.equal(bought.body.medicine.stockUnits, 10);
+    assert.equal(bought.body.medicine.expiryDate.slice(0, 10), isoDay(100));
+    const later = await call('POST', `/admin/medicines/${amox._id}/purchases`, { quantity: 1, costPerUnit: 2500, expiryDate: isoDay(300) }, adminToken);
+    assert.equal(later.body.medicine.expiryDate.slice(0, 10), isoDay(100), 'the earliest expiry on hand is kept');
+
+    const broilers = categories.find((c) => c.slug === 'broilers');
+    const batch = (await call('POST', '/admin/batches', { category: broilers._id, quantityPurchased: 300, targetAgeDays: 42 }, adminToken)).body.batch;
+    const treated = await call(
+      'POST',
+      '/admin/medicines/treatments',
+      {
+        givenTo: 'BATCH',
+        batchId: batch._id,
+        purpose: 'TREATMENT',
+        condition: 'CRD',
+        route: 'DRINKING_WATER',
+        birdsTreated: 300,
+        durationDays: 5,
+        lines: [
+          { medicineId: amox._id, quantity: 5, dosage: '1 g per 2 L water' },
+          { medicineId: vaccine._id, quantity: 1, withdrawalDays: 0 },
+        ],
+      },
+      adminToken
+    );
+    assert.equal(treated.status, 201, JSON.stringify(treated.body));
+    // 5 days of treatment from today: last dose in 4 days, plus 7 days of withdrawal.
+    const until = new Date(treated.body.withdrawalUntil);
+    const expected = new Date();
+    expected.setHours(0, 0, 0, 0);
+    expected.setDate(expected.getDate() + 4 + 7);
+    assert.equal(until.getTime(), expected.getTime(), 'withdrawal runs from the last dose');
+
+    const perBatch = (await call('GET', `/admin/medicines/batch/${batch._id}`, null, adminToken)).body;
+    assert.equal(perBatch.treatments.length, 1, 'one treatment with two medicines is one record');
+    assert.equal(perBatch.treatments[0].medicines.length, 2);
+    assert.equal(new Date(perBatch.withdrawalUntil).getTime(), expected.getTime());
+
+    const lowAlerts = async () =>
+      (await call('GET', '/admin/notifications?limit=50', null, adminToken)).body.notifications.filter((n) => n.type === 'MEDICINE_LOW' && n.title.includes('Amoxicillin'));
+    assert.equal((await lowAlerts()).length, 0, 'no alert above the alert level (6 left)');
+    const pen = await call('POST', '/admin/medicines/treatments', { givenTo: 'GROUP', groupName: 'Layer house 2', purpose: 'PREVENTION', lines: [{ medicineId: amox._id, quantity: 3 }] }, adminToken);
+    assert.equal(pen.status, 201, JSON.stringify(pen.body));
+    assert.equal((await lowAlerts()).length, 1, 'alert when stock reaches the alert level');
+
+    const over = await call('POST', '/admin/medicines/treatments', { lines: [{ medicineId: amox._id, quantity: 1 }, { medicineId: amox._id, quantity: 50 }] }, adminToken);
+    assert.equal(over.status, 409, 'cannot give more than is in store');
+    const noPen = await call('POST', '/admin/medicines/treatments', { givenTo: 'GROUP', lines: [{ medicineId: amox._id, quantity: 1 }] }, adminToken);
+    assert.equal(noPen.status, 400, 'a pen / group needs a name');
+
+    let store = (await call('GET', '/admin/medicines', null, adminToken)).body;
+    assert.equal(store.medicines.find((m) => m._id === amox._id).stockUnits, 3, 'a rejected entry deducts nothing');
+    assert.ok(store.withdrawals.some((w) => w.batch === batch._id && w.medicines.includes('Amoxicillin 20%')), 'the batch is listed as on withdrawal');
+    assert.ok(!store.withdrawals.some((w) => w.groupName === 'Layer house 2' && w.medicines.includes('Gumboro Vaccine')));
+    assert.equal(store.summary.spent30Days, 12500);
+    assert.ok(store.summary.treatments30Days >= 2);
+    assert.ok(store.summary.purposes30Days.TREATMENT >= 1 && store.summary.purposes30Days.PREVENTION >= 1);
+
+    // Expiry alerts: a warning when near, an "expired" alert when past, then weekly reminders until disposed of.
+    const { checkMedicineExpiry } = require('../services/medicineService');
+    const { MedicineItem } = require('../models');
+    const gumboroAlerts = async () =>
+      (await call('GET', '/admin/notifications?limit=50', null, adminToken)).body.notifications.filter((n) => n.type === 'MEDICINE_EXPIRY' && n.title.includes('Gumboro'));
+    await call('PUT', `/admin/medicines/${vaccine._id}`, { expiryDate: isoDay(10) }, adminToken);
+    assert.equal((await gumboroAlerts()).length, 1, 'warning sent as soon as a near expiry date is entered');
+    assert.match((await gumboroAlerts())[0].title, /expires in (9|10) day/);
+    assert.equal(await checkMedicineExpiry(), 0, 'one warning per expiry date');
+
+    await call('PUT', `/admin/medicines/${vaccine._id}`, { expiryDate: isoDay(-2) }, adminToken);
+    let alerts = await gumboroAlerts();
+    assert.equal(alerts.length, 2, 'expired alert sent straight away');
+    assert.match(alerts[0].title, /^Expired drug: Gumboro/);
+    assert.equal(await checkMedicineExpiry(), 0, 'no repeat within the week');
+    await MedicineItem.updateOne({ _id: vaccine._id }, { $set: { expiredAlertSentAt: new Date(Date.now() - 8 * DAY) } });
+    assert.equal(await checkMedicineExpiry(), 1, 'weekly reminder while expired stock is in store');
+    alerts = await gumboroAlerts();
+    assert.match(alerts[0].title, /^Reminder: expired Gumboro/);
+    assert.equal(await checkMedicineExpiry(), 0);
+
+    const expiredUse = await call('POST', '/admin/medicines/treatments', { lines: [{ medicineId: vaccine._id, quantity: 1 }] }, adminToken);
+    assert.equal(expiredUse.status, 400, 'expired medicine cannot be given');
+    store = (await call('GET', '/admin/medicines', null, adminToken)).body;
+    assert.ok(store.medicines.find((m) => m._id === vaccine._id).isExpired);
+    assert.ok(store.summary.expired >= 1);
+    const dashExpired = (await call('GET', '/admin/dashboard', null, adminToken)).body.stats;
+    assert.ok(dashExpired.expiredMedicines.some((m) => m.name === 'Gumboro Vaccine'), 'the dashboard lists expired drugs');
+
+    const disposed = await call('POST', `/admin/medicines/${vaccine._id}/dispose`, { quantity: 3, reason: 'EXPIRED', note: 'Burnt' }, adminToken);
+    assert.equal(disposed.status, 200, JSON.stringify(disposed.body));
+    assert.equal(disposed.body.medicine.stockUnits, 0);
+    assert.equal(disposed.body.medicine.expiryDate, undefined, 'an emptied store has no expiry date');
+    await MedicineItem.updateOne({ _id: vaccine._id }, { $set: { expiredAlertSentAt: new Date(Date.now() - 8 * DAY) } });
+    assert.equal(await checkMedicineExpiry(), 0, 'reminders stop once the expired stock is disposed of');
+
+    const noReason = await call('POST', `/admin/medicines/${amox._id}/adjust`, { countedUnits: 2 }, adminToken);
+    assert.equal(noReason.status, 400);
+    const counted = await call('POST', `/admin/medicines/${amox._id}/adjust`, { countedUnits: 2, note: 'Stock count' }, adminToken);
+    assert.equal(counted.body.medicine.stockUnits, 2);
+
+    const ledger = (await call('GET', `/admin/medicines/transactions?medicine=${amox._id}`, null, adminToken)).body.transactions;
+    assert.deepEqual(ledger.map((t) => t.type).reverse(), ['OPENING', 'PURCHASE', 'PURCHASE', 'USAGE', 'USAGE', 'ADJUSTMENT']);
+    assert.equal(ledger[0].balanceAfter, 2, 'latest ledger balance matches stock');
+    const dash = (await call('GET', '/admin/dashboard', null, adminToken)).body.stats;
+    assert.ok(dash.lowMedicines.some((m) => m.name === 'Amoxicillin 20%'));
+    assert.ok(dash.batchesUnderWithdrawal >= 1);
+    assert.equal((await call('GET', '/admin/medicines', null, customerToken)).status, 403);
+  });
+
   await check('prepared meat sells like any product but is never treated as live birds', async () => {
     const meatCat = categories.find((c) => c.slug === 'prepared-meat');
     const created = await call('POST', '/admin/products', { name: 'Dressed Chicken', sku: '', category: meatCat._id, price: '9000', stock: '10', variants: [] }, adminToken);

@@ -1,5 +1,5 @@
 const mongoose = require('mongoose');
-const { Product, Order, User, BulkOrder, ContactMessage, StockLoss, MarketTrip, FlockBatch, FeedItem, ProcessingRun, Category } = require('../models');
+const { Product, Order, User, BulkOrder, ContactMessage, StockLoss, MarketTrip, FlockBatch, FeedItem, MedicineItem, MedicineTransaction, ProcessingRun, Category } = require('../models');
 const ApiError = require('../utils/ApiError');
 const asyncHandler = require('../utils/asyncHandler');
 const escapeRegex = require('../utils/escapeRegex');
@@ -48,6 +48,8 @@ exports.getDashboard = asyncHandler(async (req, res) => {
     meatProducts,
     meatExpiring,
     processed30d,
+    medicineItems,
+    batchesUnderWithdrawal,
   ] = await Promise.all([
     Product.countDocuments(),
     Order.countDocuments(),
@@ -113,7 +115,11 @@ exports.getDashboard = asyncHandler(async (req, res) => {
       { $match: { status: 'COMPLETED', processedOn: { $gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) } } },
       { $group: { _id: null, birds: { $sum: '$birdsIn' } } },
     ]),
+    MedicineItem.find({ isActive: true }).select('name unit stockUnits lowStockUnits expiryDate').lean(),
+    MedicineTransaction.distinct('batch', { type: 'USAGE', batch: { $exists: true }, withdrawalUntil: { $gt: new Date(new Date().setHours(0, 0, 0, 0)) } }),
   ]);
+  const expiryCutoff = Date.now() + 30 * 24 * 60 * 60 * 1000;
+  const startOfToday = new Date(new Date().setHours(0, 0, 0, 0));
   const batchSummaries = openBatches.map((b) => ({ status: b.status, ...b.counts() }));
 
   // Build a continuous six-month series so empty months render as zero rather than disappearing.
@@ -154,6 +160,12 @@ exports.getDashboard = asyncHandler(async (req, res) => {
       meatInStock: meatProducts.reduce((s, p) => s + (p.variants?.length ? p.variants.reduce((x, v) => x + (v.stock || 0), 0) : p.stock || 0), 0),
       meatExpiring,
       birdsProcessed30d: processed30d[0]?.birds || 0,
+      lowMedicines: medicineItems.filter((m) => m.stockUnits <= m.lowStockUnits).map((m) => ({ name: m.name, stockUnits: m.stockUnits, unit: m.unit })),
+      medicinesExpiring: medicineItems.filter((m) => m.stockUnits > 0 && m.expiryDate && new Date(m.expiryDate) >= startOfToday && new Date(m.expiryDate).getTime() <= expiryCutoff).length,
+      expiredMedicines: medicineItems
+        .filter((m) => m.stockUnits > 0 && m.expiryDate && new Date(m.expiryDate) < startOfToday)
+        .map((m) => ({ name: m.name, stockUnits: m.stockUnits, unit: m.unit, expiryDate: m.expiryDate })),
+      batchesUnderWithdrawal: batchesUnderWithdrawal.length,
       lowFeeds: feedItems.filter((f) => f.stockBags <= f.lowStockBags).map((f) => ({ name: f.name, stockBags: f.stockBags })),
     },
     lowStock,

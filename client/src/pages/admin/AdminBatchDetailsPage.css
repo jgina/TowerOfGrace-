@@ -415,3 +415,52 @@
   flex-wrap: wrap;
   gap: 2px 8px;
 }
+
+/* ---------- Health & treatments ---------- */
+
+.batch-withdrawal {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+  padding: var(--space-3) var(--space-4);
+  border-left: 4px solid var(--brand-amber-600);
+  border-radius: var(--radius-sm);
+  background: var(--brand-amber-100);
+  font-size: var(--text-sm);
+}
+
+.batch-withdrawal svg {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  color: var(--brand-amber-700);
+}
+
+.batch-health .batch-health__list {
+  gap: 0;
+}
+
+.batch-health .batch-health__list li {
+  display: grid;
+  grid-template-columns: 110px minmax(0, 1fr);
+  gap: var(--space-4);
+  align-items: start;
+  padding: var(--space-3) 0;
+}
+
+.batch-health__list li > span {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: var(--text-sm);
+}
+
+.batch-health__list small {
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+}
+
+.batch-health__date {
+  font-weight: var(--weight-semibold);
+}

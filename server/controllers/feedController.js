@@ -147,6 +147,7 @@ async function birdProducts(ids) {
   else filter.isActive = true;
   return Product.find(filter).select('name availableStock').sort({ name: 1 }).lean();
 }
+exports.birdProducts = birdProducts;
 
 // Who can be fed: open flock batches (growing or ready for sale) and birds already in the main stock.
 exports.feedingTargets = asyncHandler(async (req, res) => {

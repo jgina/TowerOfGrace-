@@ -43,6 +43,9 @@ function startBatchScheduler() {
     require('./meatExpiryService')
       .checkMeatExpiry()
       .catch((error) => console.warn(`Meat expiry check: ${error.message}`));
+    require('./medicineService')
+      .checkMedicineExpiry()
+      .catch((error) => console.warn(`Medicine expiry check: ${error.message}`));
   };
   run();
   timer = setInterval(run, INTERVAL_MS);

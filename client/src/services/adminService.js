@@ -70,6 +70,16 @@ export const adminService = {
   recordFeedPurchase: (id, payload) => api.post(`/admin/feeds/${id}/purchases`, payload).then(data),
   recordFeedUsage: (payload) => api.post('/admin/feeds/usage', payload).then(data),
   adjustFeed: (id, payload) => api.post(`/admin/feeds/${id}/adjust`, payload).then(data),
+  // Medicine store
+  listMedicines: (params) => api.get('/admin/medicines', { params }).then(data),
+  medicineTransactions: (params) => api.get('/admin/medicines/transactions', { params }).then(data),
+  batchTreatments: (batchId) => api.get(`/admin/medicines/batch/${batchId}`).then(data),
+  createMedicine: (payload) => api.post('/admin/medicines', payload).then(data),
+  updateMedicine: (id, payload) => api.put(`/admin/medicines/${id}`, payload).then(data),
+  recordMedicinePurchase: (id, payload) => api.post(`/admin/medicines/${id}/purchases`, payload).then(data),
+  recordTreatment: (payload) => api.post('/admin/medicines/treatments', payload).then(data),
+  adjustMedicine: (id, payload) => api.post(`/admin/medicines/${id}/adjust`, payload).then(data),
+  disposeMedicine: (id, payload) => api.post(`/admin/medicines/${id}/dispose`, payload).then(data),
 
   // Meat processing
   listProcessing: (params) => api.get('/admin/processing', { params }).then(data),

@@ -97,12 +97,12 @@ export default function AdminSettingsPage() {
 
         <section className="admin-card">
           <div className="admin-card__head">
-            <h2>Feed Alerts</h2>
+            <h2>Feed &amp; Medicine Alerts</h2>
           </div>
           <div className="admin-card__body stack">
             <FormField
-              label="Email the boss when feed runs low"
-              hint="One or more addresses, separated by commas. Sent once when a feed reaches its alert level (10 bags by default)."
+              label="Email the boss when feed or medicine runs low"
+              hint="One or more addresses, separated by commas. Sent once when a feed or medicine reaches its alert level, and when a medicine is about to expire."
             >
               <input
                 className="input"

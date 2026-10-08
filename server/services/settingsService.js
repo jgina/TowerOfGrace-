@@ -4,7 +4,7 @@ const { Content } = require('../models');
 const DEFAULT_SETTINGS = {
   currency: 'NGN',
   lowStockThreshold: 10,
-  // Comma-separated emails (e.g. the farm owner) that receive low-feed alerts.
+  // Comma-separated emails (e.g. the farm owner) that receive feed-store and medicine-store alerts.
   feedAlertEmails: '',
   deliveryMethods: [
     {
