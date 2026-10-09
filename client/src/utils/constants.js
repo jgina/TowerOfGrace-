@@ -48,7 +48,7 @@ export const STOCK_LABELS = {
 };
 
 export const GALLERY_CATEGORIES = [
-  'Farm', 'Broilers', 'Noilers', 'Eggs', 'Turkeys', 'Facilities', 'Production', 'Team', 'Packaging', 'Deliveries',
+  'Farm', 'Broilers', 'Noilers', 'Eggs', 'Turkeys', 'Prepared Meat', 'Facilities', 'Production', 'Team', 'Packaging', 'Deliveries',
 ];
 
 export const BUSINESS_TYPES = ['Hotel', 'Restaurant', 'Retailer', 'Distributor', 'Supermarket', 'Caterer', 'Other Business'];

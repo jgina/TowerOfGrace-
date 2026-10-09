@@ -23,6 +23,18 @@ import rawChicken from './Chicken meat img.jpg';
 import broodingChicks from './web/brooding-chicks.jpg';
 import noilerCock from './web/noiler-cock.jpg';
 import roastedChicken from './web/roasted-chicken.jpg';
+import feedStore from './Feed Store cvc.jpg';
+import drinkerTrough from './Water & Sanitation.jpg';
+import nippleDrinker from './Water & Sanitation cvc.jpg';
+import chilledDisplay from './Thawing Safelycc.jpg';
+import thawingBagged from './Thawing Safely.jpg';
+import thawingPlate from './Thawing Safelybnb.jpg';
+import kitchenHygiene from './Kitchen Hygiene.jpg';
+import cleaverChicken from './Kitchen Hygiene main.jpg';
+import roastWholeChicken from './Whole Dressed Chickenxxx.jpg';
+import herbRoastChicken from './Whole Dressed Chickenvvv.jpg';
+import grilledDrumsticks from './Roasted & Grilleddfd.jpg';
+import grilledQuarters from './Roasted & Grilledvcv.jpg';
 import { siteImage } from './siteImages';
 
 // `fit: 'cutout'` marks cut-out photos on a white background, which must never be cropped.
@@ -47,6 +59,18 @@ export const PHOTOS = {
   turkeyRun: img(turkeyRun, 'White turkeys in a fenced grass run'),
   rawChicken: img(rawChicken, 'Fresh, cleaned chicken wings ready to cook'),
   roastedChicken: img(roastedChicken, 'Golden roasted whole chickens'),
+  feedStore: img(feedStore, 'Bags of poultry feed stacked off the floor in a dry feed store'),
+  drinkerTrough: img(drinkerTrough, 'Young broilers drinking from a clean water trough'),
+  nippleDrinker: img(nippleDrinker, 'Broilers drinking from a nipple drinker line'),
+  chilledDisplay: img(chilledDisplay, 'Whole chickens and chicken pieces kept chilled in a display cooler'),
+  thawingBagged: img(thawingBagged, 'Bagged whole chickens thawing on a tray'),
+  thawingPlate: img(thawingPlate, 'A frozen whole chicken thawing on a plate'),
+  kitchenHygiene: img(kitchenHygiene, 'Trimming raw chicken in a clean kitchen sink'),
+  cleaverChicken: img(cleaverChicken, 'A gloved cook cutting a whole chicken on a wooden board'),
+  roastWholeChicken: img(roastWholeChicken, 'A whole chicken roasted golden with herbs'),
+  herbRoastChicken: img(herbRoastChicken, 'A herb-seasoned whole roast chicken in a baking dish'),
+  grilledDrumsticks: img(grilledDrumsticks, 'Grilled, well-seasoned chicken drumsticks'),
+  grilledQuarters: img(grilledQuarters, 'Barbecued chicken leg quarters on the grill'),
 };
 
 // A file in assets/site/ named after the slot replaces the bundled photo (see assets/siteImages.js).
@@ -85,40 +109,60 @@ const P = PHOTOS;
 */
 export const CARD_IMAGES = {
   'home-journey': [P.broodingChicks, P.dayOldChicks, P.broilerHouse, P.broilersPen],
-  'home-audience': [P.eggsAndHens, P.roastedChicken, P.whiteBroiler, P.rawChicken, P.eggTrays, P.eggBaskets],
-  'home-knowhow': [P.rawChicken, P.eggTrays, P.goldenHen],
+  'home-audience': [P.eggsAndHens, P.roastedChicken, P.whiteBroiler, P.grilledDrumsticks, P.eggTrays, P.eggBaskets],
+  'home-knowhow': [P.chilledDisplay, P.eggTrays, P.goldenHen],
   'about-services': [P.broilersPen, P.noilerCock, P.eggCollection, P.turkeyRun, P.eggBaskets, P.eggsAndHens],
   'about-approach': [P.brownHens, P.broilerHouse, P.broodingChicks, P.noilers],
-  'farm-sections': [P.broodingChicks, P.broilerHouse, P.eggCollection, P.turkeyRun, null, null],
-  'farm-routine': [P.brownHens, P.broilersPen, P.eggBaskets, P.dayOldChicks, P.noilerCock],
+  'farm-sections': [P.broodingChicks, P.broilerHouse, P.eggCollection, P.turkeyRun, P.feedStore, P.drinkerTrough],
+  'farm-routine': [P.brownHens, P.nippleDrinker, P.eggBaskets, P.dayOldChicks, P.noilerCock],
   'quality-standards': [P.broilerHouse, P.dayOldChicks, P.brownHens, P.eggTrays],
-  'quality-foodsafety': [P.rawChicken, null, P.roastedChicken, P.eggsAndHens, P.eggBaskets, null],
+  'quality-foodsafety': [P.chilledDisplay, P.thawingBagged, P.roastedChicken, P.eggsAndHens, P.eggBaskets, P.kitchenHygiene],
   'production-steps': [P.broodingChicks, P.dayOldChicks, P.broilerHouse, P.broilersPen, P.whiteBroiler, P.eggTrays],
   'production-timelines': [P.whiteBroiler, P.goldenHen, P.eggsAndHens, P.turkeyRun],
   'shop-guide': [P.whiteBroiler, P.turkeyRun, P.eggTrays],
-  'shop-prepared': [null, P.rawChicken, null, P.turkeyFlock], // the roast photo is the section's feature image
-  'bulk-buyers': [P.eggsAndHens, P.roastedChicken, P.rawChicken, P.eggTrays, P.eggBaskets, P.broilerHouse],
+  'shop-prepared': [P.roastWholeChicken, P.rawChicken, P.grilledDrumsticks, P.turkeyFlock], // the roast photo is the section's feature image
+  'bulk-buyers': [P.eggsAndHens, P.roastedChicken, P.herbRoastChicken, P.eggTrays, P.eggBaskets, P.broilerHouse],
   'contact-help': [P.whiteBroiler, P.eggBaskets, P.eggTrays],
 };
 
 /** Bundled photo for card n (0-based) of a slot prefix, if any. */
 export const cardImage = (prefix, index) => CARD_IMAGES[prefix]?.[index] || null;
 
-// Shown in the gallery until the admin uploads photos.
-export const DEFAULT_GALLERY = [
-  { _id: 'default-1', category: 'Facilities', title: 'Broiler house', image: P.broilerHouse },
-  { _id: 'default-2', category: 'Broilers', title: 'Broilers', image: P.broilersPen },
-  { _id: 'default-3', category: 'Production', title: 'Brooding day-old chicks', image: P.dayOldChicks },
-  { _id: 'default-4', category: 'Eggs', title: 'Egg collection', image: P.eggCollection },
-  { _id: 'default-5', category: 'Noilers', title: 'Noilers', image: P.noilers },
-  { _id: 'default-6', category: 'Turkeys', title: 'Turkeys', image: P.turkeys },
-  { _id: 'default-7', category: 'Farm', title: 'Turkey flock', image: P.turkeyFlock },
-  { _id: 'default-8', category: 'Production', title: 'Chicks in the brooder', image: P.broodingChicks },
-  { _id: 'default-9', category: 'Noilers', title: 'Noiler cock', image: P.noilerCock },
-  { _id: 'default-10', category: 'Farm', title: 'Hens in the pen', image: P.brownHens },
-  { _id: 'default-11', category: 'Turkeys', title: 'Turkeys in the run', image: P.turkeyRun },
-  { _id: 'default-12', category: 'Eggs', title: 'Freshly collected eggs', image: P.eggBaskets },
+// Shown in the gallery until the admin uploads photos — every bundled photo appears here.
+const GALLERY = [
+  ['Facilities', 'Broiler house', P.broilerHouse],
+  ['Broilers', 'Broilers', P.broilersPen],
+  ['Production', 'Brooding day-old chicks', P.dayOldChicks],
+  ['Eggs', 'Egg collection', P.eggCollection],
+  ['Noilers', 'Noilers', P.noilers],
+  ['Turkeys', 'Turkeys', P.turkeys],
+  ['Farm', 'Turkey flock', P.turkeyFlock],
+  ['Production', 'Chicks in the brooder', P.broodingChicks],
+  ['Noilers', 'Noiler cock', P.noilerCock],
+  ['Farm', 'Hens in the pen', P.brownHens],
+  ['Turkeys', 'Turkeys in the run', P.turkeyRun],
+  ['Eggs', 'Freshly collected eggs', P.eggBaskets],
+  ['Facilities', 'Feed store', P.feedStore],
+  ['Facilities', 'Clean drinking water', P.drinkerTrough],
+  ['Broilers', 'Nipple drinkers', P.nippleDrinker],
+  ['Broilers', 'White broiler', P.whiteBroiler],
+  ['Noilers', 'Golden hen', P.goldenHen],
+  ['Eggs', 'Eggs in trays', P.eggTrays],
+  ['Eggs', 'Hens and fresh eggs', P.eggsAndHens],
+  ['Prepared Meat', 'Whole roast chicken', P.roastWholeChicken],
+  ['Prepared Meat', 'Herb roast chicken', P.herbRoastChicken],
+  ['Prepared Meat', 'Roasted chickens', P.roastedChicken],
+  ['Prepared Meat', 'Grilled drumsticks', P.grilledDrumsticks],
+  ['Prepared Meat', 'Grilled chicken quarters', P.grilledQuarters],
+  ['Prepared Meat', 'Chicken wings', P.rawChicken],
+  ['Prepared Meat', 'Chilled chicken', P.chilledDisplay],
+  ['Prepared Meat', 'Thawing whole chickens', P.thawingBagged],
+  ['Prepared Meat', 'Thawing in the fridge', P.thawingPlate],
+  ['Prepared Meat', 'Kitchen hygiene', P.kitchenHygiene],
+  ['Prepared Meat', 'Cutting a whole chicken', P.cleaverChicken],
 ];
+
+export const DEFAULT_GALLERY = GALLERY.map(([category, title, image], i) => ({ _id: `default-${i + 1}`, category, title, image }));
 
 /** Returns the uploaded image if present, otherwise the bundled fallback. */
 export const withFallback = (image, fallback) => (image?.url ? image : fallback || null);

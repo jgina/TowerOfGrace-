@@ -7,6 +7,7 @@ const GALLERY_CATEGORIES = [
   'Noilers',
   'Eggs',
   'Turkeys',
+  'Prepared Meat',
   'Facilities',
   'Production',
   'Team',
