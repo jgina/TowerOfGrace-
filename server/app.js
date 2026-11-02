@@ -1,9 +1,11 @@
+
 const express = require('express');
 const helmet = require('helmet');
 const cors = require('cors');
 const compression = require('compression');
 const morgan = require('morgan');
 const mongoSanitize = require('express-mongo-sanitize');
+
 const config = require('./config');
 const ApiError = require('./utils/ApiError');
 const routes = require('./routes');
@@ -15,33 +17,94 @@ const app = express();
 app.set('trust proxy', 1);
 app.disable('x-powered-by');
 
-app.use(helmet({ crossOriginResourcePolicy: { policy: 'cross-origin' } }));
+// Allowed frontend origins
+const allowedOrigins = [
+  'https://tower-of-grace-woad.vercel.app',
+  ...(config.frontendUrls || [])
+].map(origin => origin.replace(/\/$/, ''));
+
+// CORS configuration
 app.use(
   cors({
     origin(origin, callback) {
-      // Allow same-origin/server-to-server requests (no Origin header) and configured frontends.
-      if (!origin || config.frontendUrls.includes(origin)) return callback(null, true);
-      return callback(ApiError.forbidden(`Origin ${origin} is not allowed`));
+      // Allow requests without an Origin header
+      if (!origin) {
+        return callback(null, true);
+      }
+
+      const normalizedOrigin = origin.replace(/\/$/, '');
+
+      // Allow explicitly configured frontend domains
+      if (allowedOrigins.includes(normalizedOrigin)) {
+        return callback(null, true);
+      }
+
+      // Allow Vercel preview deployments for this project
+      if (
+        /^https:\/\/tower-of-grace-[a-z0-9-]+\.vercel\.app$/.test(normalizedOrigin)
+      ) {
+        return callback(null, true);
+      }
+
+      return callback(
+        ApiError.forbidden(`Origin ${origin} is not allowed`)
+      );
     },
     credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization']
   })
 );
+
+app.use(
+  helmet({
+    crossOriginResourcePolicy: {
+      policy: 'cross-origin'
+    }
+  })
+);
+
 app.use(compression());
+
 app.use(
   express.json({
     limit: '1mb',
-    // Keep the raw body for payment webhook signature verification.
     verify: (req, res, buf) => {
-      if (req.originalUrl.startsWith('/api/payments/webhook')) req.rawBody = buf;
-    },
+      if (req.originalUrl.startsWith('/api/payments/webhook')) {
+        req.rawBody = buf;
+      }
+    }
   })
 );
-app.use(express.urlencoded({ extended: true, limit: '1mb' }));
-app.use(mongoSanitize());
-if (config.env !== 'test') app.use(morgan(config.env === 'production' ? 'combined' : 'dev'));
 
+app.use(
+  express.urlencoded({
+    extended: true,
+    limit: '1mb'
+  })
+);
+
+app.use(mongoSanitize());
+
+if (config.env !== 'test') {
+  app.use(
+    morgan(config.env === 'production' ? 'combined' : 'dev')
+  );
+}
+
+// API routes
 app.use('/api', apiLimiter, routes);
 
+// Health check
+app.get('/health', (req, res) => {
+  res.status(200).json({
+    success: true,
+    message: 'Tower of Grace API is running',
+    environment: config.env
+  });
+});
+
+// 404 and error handlers
 app.use(notFound);
 app.use(errorHandler);
 
