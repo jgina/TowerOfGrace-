@@ -100,6 +100,7 @@ export default function Footer() {
           <div className="footer-bottom__links">
             <Link to="/shop">Shop</Link>
             <Link to="/account">My Account</Link>
+            <Link to="/admin" className="footer-admin-link">Admin</Link>
           </div>
         </div>
       </div>

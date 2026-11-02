@@ -63,7 +63,7 @@ Client: set `VITE_API_URL` to the deployed API URL. The client adds `/api` if th
 
 ### Deployment (Vercel + Render)
 
-- Vercel: set `VITE_API_URL` to `https://towerofgrace-1.onrender.com/api` and redeploy after changing it. The client also defaults to this API in production if the variable is unset.
+- Vercel: use `client` as the project root, set `VITE_API_URL` to `https://towerofgrace-1.onrender.com/api`, and redeploy after changing it. `client/vercel.json` rewrites direct page visits (including `/admin`) to the SPA. The client also defaults to this API in production if the variable is unset.
 - Render: set `FRONTEND_URL` to `https://tower-of-grace-woad.vercel.app`. Add any custom frontend domains to `FRONTEND_URLS`. If configuring a Render health check, use `/api/health`.
 
 ---

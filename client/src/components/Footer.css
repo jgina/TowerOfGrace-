@@ -137,7 +137,17 @@
 
 .footer-bottom__links {
   display: flex;
+  align-items: center;
   gap: var(--space-5);
+}
+
+.footer-bottom__links .footer-admin-link {
+  font-size: 0.65rem;
+  opacity: 0.55;
+}
+
+.footer-bottom__links .footer-admin-link:hover {
+  opacity: 1;
 }
 
 .footer-bottom a:hover {
