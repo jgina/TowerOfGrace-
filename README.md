@@ -59,7 +59,12 @@ Sign in to the admin panel at **http://localhost:5173/admin/login**.
 | `FLUTTERWAVE_SECRET_KEY`, `FLUTTERWAVE_WEBHOOK_HASH` | optional | Enables Flutterwave at checkout |
 | `EMAIL_HOST`, `EMAIL_PORT`, `EMAIL_USER`, `EMAIL_PASSWORD`, `EMAIL_FROM`, `ADMIN_NOTIFY_EMAIL` | optional | Order and enquiry emails |
 
-Client: `client/.env.example` → `VITE_API_URL` (leave empty in development; Vite proxies `/api`).
+Client: set `VITE_API_URL` to the deployed API URL. The client adds `/api` if the value is only the server origin. Leave it empty in development; Vite proxies `/api`.
+
+### Deployment (Vercel + Render)
+
+- Vercel: set `VITE_API_URL` to `https://towerofgrace-1.onrender.com/api` and redeploy after changing it. The client also defaults to this API in production if the variable is unset.
+- Render: set `FRONTEND_URL` to `https://tower-of-grace-woad.vercel.app`. Add any custom frontend domains to `FRONTEND_URLS`. If configuring a Render health check, use `/api/health`.
 
 ---
 
