@@ -20,6 +20,8 @@ app.disable('x-powered-by');
 // Allowed frontend origins
 const allowedOrigins = [
   'https://tower-of-grace-woad.vercel.app',
+  'https://towerofgracefarms.com',
+  'https://www.towerofgracefarms.com',
   ...(config.frontendUrls || [])
 ].map(origin => origin.replace(/\/$/, ''));
 
