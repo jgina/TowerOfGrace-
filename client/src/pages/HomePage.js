@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { ArrowRight, Bird, Egg, Feather, HeartPulse, ShieldCheck, Truck, Handshake, Drumstick, Building2, ShoppingBasket, UtensilsCrossed } from 'lucide-react';
+import { ArrowRight, Bird, Egg, Feather, Drumstick, Building2, ShoppingBasket, UtensilsCrossed } from 'lucide-react';
 import SEO, { useOrganizationJsonLd } from '../components/SEO';
 import SectionHeading from '../components/SectionHeading';
 import SmartImage, { cloudinaryUrl } from '../components/SmartImage';
@@ -11,7 +11,7 @@ import { useContent } from '../context/ContentContext';
 import useFetch from '../hooks/useFetch';
 import { catalogService } from '../services/catalogService';
 import { siteService } from '../services/siteService';
-import { DEFAULT_GALLERY, PAGE_IMAGES, categoryImage, withFallback } from '../assets/images';
+import { DEFAULT_GALLERY, PAGE_IMAGES, PHOTOS, categoryImage, withFallback } from '../assets/images';
 import './HomePage.css';
 
 const wordCount = (text = '') => text.split(/\s+/).filter(Boolean).length;
@@ -42,7 +42,7 @@ function RevealWords({ text = '', delay = 0, className = '' }) {
 }
 
 const CATEGORY_ICONS = { broilers: Drumstick, noilers: Bird, eggs: Egg, turkeys: Feather, 'prepared-meat': UtensilsCrossed };
-const PILLAR_ICONS = [HeartPulse, ShieldCheck, Truck, Handshake];
+const PILLAR_IMAGES = [PHOTOS.brightPoultryHouse, PHOTOS.kitchenHygiene, PHOTOS.chilledDisplay, PHOTOS.farmFeeding];
 
 export default function HomePage() {
   const home = useContent('home');
@@ -118,10 +118,10 @@ export default function HomePage() {
       </section>
 
       {/* ---------- Pillars ---------- */}
-      <section className="section section--white">
+      <section className="section section--white home-pillars">
         <div className="container">
           <SectionHeading eyebrow={pillars.eyebrow} title={pillars.title} text={pillars.text} />
-          <FeatureGrid items={pillars.items} icons={PILLAR_ICONS} />
+          <FeatureGrid items={pillars.items} images={PILLAR_IMAGES} />
         </div>
       </section>
 
