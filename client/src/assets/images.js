@@ -35,6 +35,21 @@ import roastWholeChicken from './Whole Dressed Chickenxxx.jpg';
 import herbRoastChicken from './Whole Dressed Chickenvvv.jpg';
 import grilledDrumsticks from './Roasted & Grilleddfd.jpg';
 import grilledQuarters from './Roasted & Grilledvcv.jpg';
+import brightPoultryHouse from './web/bright-poultry-house.webp';
+import corrugatedCoopNoilers from './web/corrugated-coop-noilers.webp';
+import sunlitNoilerCoop from './web/sunlit-noiler-coop.webp';
+import broilersAtFeeder from './web/broilers-at-feeder.webp';
+import busyPoultryHouse from './web/busy-poultry-house.webp';
+import yellowFeederBroilers from './web/yellow-feeder-broilers.webp';
+import farmCoopNoilers from './web/farm-coop-noilers.webp';
+import sunlitNoilerFlock from './web/sunlit-noiler-flock.webp';
+import sunlitPoultryHouse from './web/sunlit-poultry-house.webp';
+import daylightChickenCoop from './web/daylight-chicken-coop.webp';
+import openSidedBroilerHouse from './web/open-sided-broiler-house.webp';
+import farmFeeding from './web/farm-feeding.webp';
+import poultryHouseWireMesh from './web/poultry-house-wire-mesh.webp';
+import whiteChickensRusticCoop from './web/white-chickens-rustic-coop.webp';
+import womanFeedingChickens from './web/woman-feeding-chickens.webp';
 import { siteImage } from './siteImages';
 
 // `fit: 'cutout'` marks cut-out photos on a white background, which must never be cropped.
@@ -71,6 +86,21 @@ export const PHOTOS = {
   herbRoastChicken: img(herbRoastChicken, 'A herb-seasoned whole roast chicken in a baking dish'),
   grilledDrumsticks: img(grilledDrumsticks, 'Grilled, well-seasoned chicken drumsticks'),
   grilledQuarters: img(grilledQuarters, 'Barbecued chicken leg quarters on the grill'),
+  brightPoultryHouse: img(brightPoultryHouse, 'White broilers resting in a bright, open-sided poultry house'),
+  corrugatedCoopNoilers: img(corrugatedCoopNoilers, 'Noiler chickens in a coop beneath a corrugated roof'),
+  sunlitNoilerCoop: img(sunlitNoilerCoop, 'Noilers gathered in a sunlit farm coop'),
+  broilersAtFeeder: img(broilersAtFeeder, 'Broilers gathered around a poultry feeder'),
+  busyPoultryHouse: img(busyPoultryHouse, 'A busy poultry house with birds across the floor'),
+  yellowFeederBroilers: img(yellowFeederBroilers, 'White broilers resting beside a yellow feeder'),
+  farmCoopNoilers: img(farmCoopNoilers, 'A flock of mixed-color noilers in their farm coop'),
+  sunlitNoilerFlock: img(sunlitNoilerFlock, 'A sunlit flock of noilers in an open-sided coop'),
+  sunlitPoultryHouse: img(sunlitPoultryHouse, 'A spacious, sunlit house with broilers and feeders'),
+  daylightChickenCoop: img(daylightChickenCoop, 'Noiler chickens in a sheltered daylight coop'),
+  openSidedBroilerHouse: img(openSidedBroilerHouse, 'Broilers in an open-sided poultry house'),
+  farmFeeding: img(farmFeeding, 'A farm worker feeding chickens in the poultry house'),
+  poultryHouseWireMesh: img(poultryHouseWireMesh, 'Broilers inside a poultry house viewed through wire mesh'),
+  whiteChickensRusticCoop: img(whiteChickensRusticCoop, 'White broilers in a rustic, open-sided coop'),
+  womanFeedingChickens: img(womanFeedingChickens, 'A farm worker caring for chickens in the poultry house'),
 };
 
 // A file in assets/site/ named after the slot replaces the bundled photo (see assets/siteImages.js).
@@ -78,8 +108,8 @@ const slot = (name, photo) => siteImage(name, photo?.alt) || photo || null;
 
 // Default photo for each product line, keyed by category slug (slot: category-<slug>).
 export const CATEGORY_IMAGES = {
-  broilers: slot('category-broilers', PHOTOS.broilersPen),
-  noilers: slot('category-noilers', PHOTOS.noilers),
+  broilers: slot('category-broilers', PHOTOS.openSidedBroilerHouse),
+  noilers: slot('category-noilers', PHOTOS.sunlitNoilerCoop),
   eggs: slot('category-eggs', PHOTOS.eggCollection),
   turkeys: slot('category-turkeys', PHOTOS.turkeyRun),
   'prepared-meat': slot('category-prepared-meat', PHOTOS.rawChicken),
@@ -87,19 +117,19 @@ export const CATEGORY_IMAGES = {
 
 // Default photos for page heroes and feature blocks (slot name in quotes).
 export const PAGE_IMAGES = {
-  homeHero: slot('home-hero', PHOTOS.broilerHouse),
-  homeInfrastructure: slot('home-infrastructure', PHOTOS.broilerHouse),
+  homeHero: slot('home-hero', PHOTOS.busyPoultryHouse),
+  homeInfrastructure: slot('home-infrastructure', PHOTOS.brightPoultryHouse),
   about: slot('about-hero', PHOTOS.eggCollection),
-  aboutStory: slot('about-story', PHOTOS.brownHens),
-  farm: slot('farm-hero', PHOTOS.turkeyFlock),
-  quality: slot('quality-hero', PHOTOS.broilersPen),
-  production: slot('production-hero', PHOTOS.dayOldChicks),
+  aboutStory: slot('about-story', PHOTOS.farmFeeding),
+  farm: slot('farm-hero', PHOTOS.openSidedBroilerHouse),
+  quality: slot('quality-hero', PHOTOS.poultryHouseWireMesh),
+  production: slot('production-hero', PHOTOS.womanFeedingChickens),
   products: slot('products-hero', PHOTOS.eggBaskets),
   preparedMeat: slot('prepared-meat', PHOTOS.roastedChicken),
-  shop: slot('shop-hero', PHOTOS.broilersPen),
-  bulk: slot('bulk-hero', PHOTOS.eggBaskets),
-  contact: slot('contact-hero', PHOTOS.broilerHouse),
-  gallery: slot('gallery-hero', PHOTOS.turkeyFlock),
+  shop: slot('shop-hero', PHOTOS.yellowFeederBroilers),
+  bulk: slot('bulk-hero', PHOTOS.farmCoopNoilers),
+  contact: slot('contact-hero', PHOTOS.daylightChickenCoop),
+  gallery: slot('gallery-hero', PHOTOS.sunlitPoultryHouse),
 };
 
 const P = PHOTOS;
@@ -108,16 +138,16 @@ const P = PHOTOS;
   null leaves the "photo coming soon" placeholder until a photo is uploaded or added to assets/site/.
 */
 export const CARD_IMAGES = {
-  'home-journey': [P.broodingChicks, P.dayOldChicks, P.broilerHouse, P.broilersPen],
+  'home-journey': [P.broodingChicks, P.dayOldChicks, P.openSidedBroilerHouse, P.farmFeeding],
   'home-audience': [P.eggsAndHens, P.roastedChicken, P.whiteBroiler, P.grilledDrumsticks, P.eggTrays, P.eggBaskets],
   'home-knowhow': [P.chilledDisplay, P.eggTrays, P.goldenHen],
   'about-services': [P.broilersPen, P.noilerCock, P.eggCollection, P.turkeyRun, P.eggBaskets, P.eggsAndHens],
-  'about-approach': [P.brownHens, P.broilerHouse, P.broodingChicks, P.noilers],
-  'farm-sections': [P.broodingChicks, P.broilerHouse, P.eggCollection, P.turkeyRun, P.feedStore, P.drinkerTrough],
-  'farm-routine': [P.brownHens, P.nippleDrinker, P.eggBaskets, P.dayOldChicks, P.noilerCock],
-  'quality-standards': [P.broilerHouse, P.dayOldChicks, P.brownHens, P.eggTrays],
+  'about-approach': [P.brownHens, P.brightPoultryHouse, P.broodingChicks, P.noilers],
+  'farm-sections': [P.broodingChicks, P.openSidedBroilerHouse, P.eggCollection, P.corrugatedCoopNoilers, P.feedStore, P.drinkerTrough],
+  'farm-routine': [P.farmFeeding, P.nippleDrinker, P.eggBaskets, P.dayOldChicks, P.noilerCock],
+  'quality-standards': [P.poultryHouseWireMesh, P.yellowFeederBroilers, P.whiteChickensRusticCoop, P.eggTrays],
   'quality-foodsafety': [P.chilledDisplay, P.thawingBagged, P.roastedChicken, P.eggsAndHens, P.eggBaskets, P.kitchenHygiene],
-  'production-steps': [P.broodingChicks, P.dayOldChicks, P.broilerHouse, P.broilersPen, P.whiteBroiler, P.eggTrays],
+  'production-steps': [P.broodingChicks, P.dayOldChicks, P.busyPoultryHouse, P.broilersAtFeeder, P.whiteBroiler, P.eggTrays],
   'production-timelines': [P.whiteBroiler, P.goldenHen, P.eggsAndHens, P.turkeyRun],
   'shop-guide': [P.whiteBroiler, P.turkeyRun, P.eggTrays],
   'shop-prepared': [P.roastWholeChicken, P.rawChicken, P.grilledDrumsticks, P.turkeyFlock], // the roast photo is the section's feature image
@@ -130,6 +160,21 @@ export const cardImage = (prefix, index) => CARD_IMAGES[prefix]?.[index] || null
 
 // Shown in the gallery until the admin uploads photos — every bundled photo appears here.
 const GALLERY = [
+  ['Facilities', 'Bright, open-sided poultry house', P.brightPoultryHouse],
+  ['Noilers', 'Noilers beneath the corrugated roof', P.corrugatedCoopNoilers],
+  ['Noilers', 'Sunlit noiler coop', P.sunlitNoilerCoop],
+  ['Broilers', 'Broilers gathered at the feeder', P.broilersAtFeeder],
+  ['Facilities', 'A busy day in the poultry house', P.busyPoultryHouse],
+  ['Broilers', 'Resting beside the yellow feeders', P.yellowFeederBroilers],
+  ['Noilers', 'Mixed-color flock in the farm coop', P.farmCoopNoilers],
+  ['Noilers', 'Sunlit noiler flock', P.sunlitNoilerFlock],
+  ['Facilities', 'Spacious sunlit poultry house', P.sunlitPoultryHouse],
+  ['Noilers', 'Noilers in the daylight coop', P.daylightChickenCoop],
+  ['Broilers', 'Open-sided broiler house', P.openSidedBroilerHouse],
+  ['Team', 'Feeding chickens on the farm', P.farmFeeding],
+  ['Facilities', 'Poultry house through wire mesh', P.poultryHouseWireMesh],
+  ['Broilers', 'White chickens in a rustic coop', P.whiteChickensRusticCoop],
+  ['Team', 'Caring for chickens in the poultry house', P.womanFeedingChickens],
   ['Facilities', 'Broiler house', P.broilerHouse],
   ['Broilers', 'Broilers', P.broilersPen],
   ['Production', 'Brooding day-old chicks', P.dayOldChicks],

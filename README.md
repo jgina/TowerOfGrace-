@@ -93,8 +93,10 @@ highlight green `#00542b`, leaf green `#186c24`, gold `#e4a80c` / `#f9bf3a`, and
 (`logo-32/180/192/512.png`). It is always shown whole, at its original proportions, and never recoloured.
 On dark backgrounds it sits on its own white plate. An admin can replace it in **Admin → Settings**.
 
-**Imagery.** No stock photos are used. Every image slot shows a branded placeholder until an admin
-uploads real Tower of Grace photos (products, gallery, hero, farm and production sections).
+**Imagery.** No stock photos are used. Bundled Tower of Grace farm photography provides the default
+page, product-category and gallery images; admins can replace it with current photos in the CMS.
+The bundled poultry-house photos are optimized WebP files in `client/src/assets/web/`, while their
+original PNGs are kept in `client/src/assets/`.
 
 ---
 
