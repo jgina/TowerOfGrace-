@@ -1,3 +1,4 @@
+import { Analytics } from '@vercel/analytics/react';
 import ScrollToTop from './components/ScrollToTop';
 import AppRoutes from './routes/AppRoutes';
 
@@ -6,6 +7,7 @@ export default function App() {
     <>
       <ScrollToTop />
       <AppRoutes />
+      <Analytics />
     </>
   );
 }
