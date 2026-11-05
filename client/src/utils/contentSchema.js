@@ -1,3 +1,5 @@
+import { BUSINESS_EMAIL, BUSINESS_PHONE } from './constants';
+
 /*
   CMS content model.
   - DEFAULT_CONTENT is what the site shows until an admin saves their own text in Admin → Content.
@@ -456,9 +458,9 @@ export const DEFAULT_CONTENT = {
   },
   contact: {
     intro: 'Reach our team for orders, deliveries and enquiries.',
-    phone: '',
+    phone: BUSINESS_PHONE,
     phoneAlt: '',
-    email: '',
+    email: BUSINESS_EMAIL,
     whatsapp: '',
     address: '',
     mapEmbedUrl: '',

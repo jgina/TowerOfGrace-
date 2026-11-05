@@ -1,5 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { siteService } from '../services/siteService';
+import { BUSINESS_EMAIL, BUSINESS_PHONE } from '../utils/constants';
 import { DEFAULT_CONTENT, mergeContent } from '../utils/contentSchema';
 
 const ContentContext = createContext(null);
@@ -27,7 +28,15 @@ export function ContentProvider({ children }) {
   }, [refresh]);
 
   const value = useMemo(() => {
-    const content = mergeContent(DEFAULT_CONTENT, saved);
+    const mergedContent = mergeContent(DEFAULT_CONTENT, saved);
+    const content = {
+      ...mergedContent,
+      contact: {
+        ...mergedContent.contact,
+        phone: String(mergedContent.contact.phone || '').trim() || BUSINESS_PHONE,
+        email: String(mergedContent.contact.email || '').trim() || BUSINESS_EMAIL,
+      },
+    };
     return {
       content,
       settings: { ...DEFAULT_SETTINGS, ...(saved.settings || {}) },
