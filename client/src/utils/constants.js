@@ -62,6 +62,7 @@ export const NIGERIAN_STATES = [
 
 export const SITE_NAME = 'Tower of Grace Farms';
 export const LEGAL_NAME = 'Tower of Grace Farms & Agro-Based Industries Ltd';
+export const SITE_URL = 'https://towerofgracefarms.com';
 
 export const LAST_ORDER_KEY = 'tgf_last_order';
 

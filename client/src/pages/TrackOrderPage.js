@@ -40,7 +40,7 @@ export default function TrackOrderPage() {
 
   return (
     <>
-      <SEO title="Track Your Order" description="Check the status of your Tower of Grace Farms order." />
+      <SEO title="Track Your Order" description="Check the status of your Tower of Grace Farms order." noIndex />
       <PageHero title="Track Your Order" subtitle="Enter your order number and the email used at checkout." compact crumbs={[{ label: 'Track Order' }]} />
       <section className="section">
         <div className="container track-body">

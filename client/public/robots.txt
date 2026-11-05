@@ -1,0 +1,13 @@
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /account
+Disallow: /cart
+Disallow: /checkout
+Disallow: /order-confirmation
+Disallow: /payment/
+Disallow: /track-order
+Disallow: /login
+Disallow: /register
+
+Sitemap: https://towerofgracefarms.com/sitemap.xml

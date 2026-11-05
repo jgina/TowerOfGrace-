@@ -61,7 +61,13 @@ export default function HomePage() {
 
   return (
     <>
-      <SEO jsonLd={orgJsonLd} />
+      <SEO
+        title="Poultry, Eggs & Turkeys in Nigeria"
+        description="Broilers, noilers, fresh eggs and turkeys raised with care. Shop online for home delivery or pickup, or request bulk supply for your business."
+        image={heroImage?.url}
+        imageAlt="Poultry products from Tower of Grace Farms"
+        jsonLd={orgJsonLd}
+      />
 
       {/* ---------- Hero ---------- */}
       <section className={`home-hero ${heroImage?.url ? 'home-hero--image' : ''}`} style={heroStyle}>
