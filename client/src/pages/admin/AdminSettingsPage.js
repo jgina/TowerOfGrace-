@@ -105,8 +105,8 @@ export default function AdminSettingsPage() {
       toast.error('Enter the stock reset pass key');
       return;
     }
-    if (resetPhrase !== 'RESET STOCK') {
-      toast.error('Type RESET STOCK to confirm');
+    if (resetPhrase.trim().toUpperCase() !== 'RESET STOCK') {
+      toast.error('Enter RESET STOCK in the confirmation field, without quotes');
       return;
     }
     setResetBusy(true);
@@ -197,8 +197,8 @@ export default function AdminSettingsPage() {
                 <FormField label="Pass key">
                   <input className="input" type="password" autoComplete="current-password" value={resetPasskey} onChange={(e) => setResetPasskey(e.target.value)} />
                 </FormField>
-                <FormField label="Type RESET STOCK to confirm">
-                  <input className="input" value={resetPhrase} onChange={(e) => setResetPhrase(e.target.value)} />
+                <FormField label="Confirmation phrase" hint="Enter RESET STOCK. Quotes are not needed.">
+                  <input className="input" value={resetPhrase} placeholder="RESET STOCK" autoCapitalize="characters" autoComplete="off" spellCheck={false} onChange={(e) => setResetPhrase(e.target.value.toUpperCase())} />
                 </FormField>
                 <button type="button" className="btn btn--danger" onClick={resetStock} disabled={resetBusy}>
                   {resetBusy ? <span className="spinner" /> : <RotateCcw />} Reset Available Stock
