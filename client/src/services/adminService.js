@@ -41,6 +41,10 @@ export const adminService = {
   // Inventory
   inventory: (params) => api.get('/admin/inventory', { params }).then(data),
   updateInventory: (productId, payload) => api.patch(`/admin/inventory/${productId}`, payload).then(data),
+  stockResetPasskeyStatus: () => api.get('/admin/stock-reset/passkey').then(data),
+  setStockResetPasskey: (passkey) => api.post('/admin/stock-reset/passkey', { passkey }).then(data),
+  resetCategoryStock: (categoryId, passkey) => api.post(`/admin/stock-reset/categories/${categoryId}`, { passkey }).then(data),
+  resetStock: (passkey) => api.post('/admin/stock-reset', { passkey }).then(data),
 
   // Mortality & losses
   listLosses: (params) => api.get('/admin/stock-losses', { params }).then(data),

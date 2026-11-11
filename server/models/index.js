@@ -19,4 +19,5 @@ module.exports = {
   MedicineItem: require('./MedicineItem'),
   MedicineTransaction: require('./MedicineTransaction'),
   ProcessingRun: require('./ProcessingRun'),
+  AdminSecuritySetting: require('./AdminSecuritySetting'),
 };

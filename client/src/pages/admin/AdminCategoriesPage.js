@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Plus, Pencil, Trash2, Tags } from 'lucide-react';
+import { Plus, Pencil, Trash2, Tags, RotateCcw, AlertTriangle } from 'lucide-react';
 import AdminPageHeader from '../../components/AdminPageHeader';
 import DataTable from '../../components/DataTable';
 import SmartImage from '../../components/SmartImage';
@@ -20,6 +20,10 @@ export default function AdminCategoriesPage() {
   const { data, loading, error, reload } = useFetch(() => adminService.listCategories(), []);
   const [editing, setEditing] = useState(null);
   const [deleting, setDeleting] = useState(null);
+  const [resettingCategory, setResettingCategory] = useState(null);
+  const [resetPasskey, setResetPasskey] = useState('');
+  const [resetPhrase, setResetPhrase] = useState('');
+  const [resetBusy, setResetBusy] = useState(false);
   const [busy, setBusy] = useState(false);
 
   const set = (field) => (e) => setEditing((c) => ({ ...c, [field]: e.target.type === 'checkbox' ? e.target.checked : e.target.value }));
@@ -56,6 +60,29 @@ export default function AdminCategoriesPage() {
       toast.error(err.message);
     } finally {
       setBusy(false);
+    }
+  };
+
+  const resetCategoryStock = async () => {
+    if (!resetPasskey) {
+      toast.error('Enter the stock reset pass key');
+      return;
+    }
+    if (resetPhrase !== 'RESET STOCK') {
+      toast.error('Type RESET STOCK to confirm');
+      return;
+    }
+    setResetBusy(true);
+    try {
+      const result = await adminService.resetCategoryStock(resettingCategory._id, resetPasskey);
+      toast.success(`${resettingCategory.name} stock reset. ${result.totals.productUnits} available unit(s) cleared.`);
+      setResettingCategory(null);
+      setResetPasskey('');
+      setResetPhrase('');
+    } catch (err) {
+      toast.error(err.message);
+    } finally {
+      setResetBusy(false);
     }
   };
 
@@ -102,6 +129,18 @@ export default function AdminCategoriesPage() {
               align: 'right',
               render: (c) => (
                 <div className="cell-actions">
+                  <button
+                    type="button"
+                    className="btn btn--danger btn--sm"
+                    onClick={() => {
+                      setResettingCategory(c);
+                      setResetPasskey('');
+                      setResetPhrase('');
+                    }}
+                    aria-label={`Reset ${c.name} stock`}
+                  >
+                    <RotateCcw /> Reset Stock
+                  </button>
                   <button type="button" className="icon-btn" onClick={() => setEditing({ ...BLANK, ...c })} aria-label="Edit">
                     <Pencil />
                   </button>
@@ -114,6 +153,36 @@ export default function AdminCategoriesPage() {
           ]}
         />
       )}
+
+      <Modal
+        open={Boolean(resettingCategory)}
+        onClose={() => !resetBusy && setResettingCategory(null)}
+        title={resettingCategory ? `Reset ${resettingCategory.name} stock?` : 'Reset category stock'}
+        subtitle="Only products in this category will be affected."
+        size="sm"
+        footer={
+          <>
+            <button type="button" className="btn btn--ghost" onClick={() => setResettingCategory(null)} disabled={resetBusy}>
+              Cancel
+            </button>
+            <button type="button" className="btn btn--danger" onClick={resetCategoryStock} disabled={resetBusy}>
+              {resetBusy ? <span className="spinner" /> : <RotateCcw />} Reset Category Stock
+            </button>
+          </>
+        }
+      >
+        <div className="stack">
+          <div className="admin-hint stock-reset-warning">
+            <AlertTriangle /> Available stock will be set to zero. Pending-order reservations and stock history are preserved.
+          </div>
+          <FormField label="Stock reset pass key" hint="Set or change this key in Admin Settings.">
+            <input className="input" type="password" autoComplete="current-password" value={resetPasskey} onChange={(e) => setResetPasskey(e.target.value)} />
+          </FormField>
+          <FormField label="Type RESET STOCK to confirm">
+            <input className="input" value={resetPhrase} onChange={(e) => setResetPhrase(e.target.value)} />
+          </FormField>
+        </div>
+      </Modal>
 
       <Modal
         open={Boolean(editing)}

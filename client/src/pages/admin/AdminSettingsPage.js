@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Save, Plus, Trash2, Info, CheckCircle2, XCircle } from 'lucide-react';
+import { Save, Plus, Trash2, Info, CheckCircle2, XCircle, KeyRound, RotateCcw, AlertTriangle } from 'lucide-react';
 import AdminPageHeader from '../../components/AdminPageHeader';
 import FormField from '../../components/FormField';
 import ImageUploader from '../../components/ImageUploader';
@@ -26,10 +26,21 @@ export default function AdminSettingsPage() {
   const uploads = useFetch(() => adminService.uploadStatus(), []);
   const [form, setForm] = useState(null);
   const [saving, setSaving] = useState(false);
+  const [resetConfigured, setResetConfigured] = useState(null);
+  const [newPasskey, setNewPasskey] = useState('');
+  const [confirmPasskey, setConfirmPasskey] = useState('');
+  const [resetPasskey, setResetPasskey] = useState('');
+  const [resetPhrase, setResetPhrase] = useState('');
+  const [passkeyBusy, setPasskeyBusy] = useState(false);
+  const [resetBusy, setResetBusy] = useState(false);
 
   useEffect(() => {
     if (settings.data) setForm(settings.data);
   }, [settings.data]);
+
+  useEffect(() => {
+    adminService.stockResetPasskeyStatus().then((result) => setResetConfigured(result.configured)).catch((err) => toast.error(err.message));
+  }, [toast]);
 
   if (settings.loading || !form) {
     return settings.error ? <ErrorState message={settings.error} onRetry={settings.reload} /> : <PageLoader />;
@@ -63,6 +74,51 @@ export default function AdminSettingsPage() {
       toast.error(err.message);
     } finally {
       setSaving(false);
+    }
+  };
+
+  const saveResetPasskey = async () => {
+    if (newPasskey.length < 8) {
+      toast.error('Pass key must be at least 8 characters');
+      return;
+    }
+    if (newPasskey !== confirmPasskey) {
+      toast.error('Pass keys do not match');
+      return;
+    }
+    setPasskeyBusy(true);
+    try {
+      await adminService.setStockResetPasskey(newPasskey);
+      setResetConfigured(true);
+      setNewPasskey('');
+      setConfirmPasskey('');
+      toast.success('Stock reset pass key saved');
+    } catch (err) {
+      toast.error(err.message);
+    } finally {
+      setPasskeyBusy(false);
+    }
+  };
+
+  const resetStock = async () => {
+    if (!resetPasskey) {
+      toast.error('Enter the stock reset pass key');
+      return;
+    }
+    if (resetPhrase !== 'RESET STOCK') {
+      toast.error('Type RESET STOCK to confirm');
+      return;
+    }
+    setResetBusy(true);
+    try {
+      const result = await adminService.resetStock(resetPasskey);
+      setResetPasskey('');
+      setResetPhrase('');
+      toast.success(`Available stock reset. ${result.totals.productUnits} product units, ${result.totals.feedBags} feed bags, and ${result.totals.medicineUnits} medicine units cleared.`);
+    } catch (err) {
+      toast.error(err.message);
+    } finally {
+      setResetBusy(false);
     }
   };
 
@@ -113,6 +169,42 @@ export default function AdminSettingsPage() {
               />
             </FormField>
             <p className="field__hint">Emails also need the email settings (EMAIL_HOST, EMAIL_USER, EMAIL_PASSWORD) in the server .env file. The in-app alert works regardless.</p>
+          </div>
+        </section>
+
+        <section className="admin-card stock-reset-card">
+          <div className="admin-card__head">
+            <h2>Stock Reset</h2>
+          </div>
+          <div className="admin-card__body stack">
+            <div className="admin-hint stock-reset-warning">
+              <AlertTriangle /> Resets available product, feed, and medicine stock to zero. Pending-order reservations, flock batches, orders, and transaction history are kept.
+            </div>
+            {resetConfigured === null && <p className="field__hint">Checking saved pass key status. You can set or change it below.</p>}
+            <div className="stock-reset-key">
+              <FormField label={resetConfigured ? 'New pass key' : 'Set pass key'} hint="Use 8 to 72 characters. The key is stored securely and cannot be viewed later.">
+                <input className="input" type="password" autoComplete="new-password" maxLength={72} value={newPasskey} onChange={(e) => setNewPasskey(e.target.value)} />
+              </FormField>
+              <FormField label="Confirm pass key">
+                <input className="input" type="password" autoComplete="new-password" maxLength={72} value={confirmPasskey} onChange={(e) => setConfirmPasskey(e.target.value)} />
+              </FormField>
+              <button type="button" className="btn btn--outline" onClick={saveResetPasskey} disabled={passkeyBusy || !newPasskey || !confirmPasskey}>
+                {passkeyBusy ? <span className="spinner" /> : <KeyRound />} {resetConfigured ? 'Change Pass Key' : 'Set Pass Key'}
+              </button>
+            </div>
+            {resetConfigured && (
+              <div className="stock-reset-action">
+                <FormField label="Pass key">
+                  <input className="input" type="password" autoComplete="current-password" value={resetPasskey} onChange={(e) => setResetPasskey(e.target.value)} />
+                </FormField>
+                <FormField label="Type RESET STOCK to confirm">
+                  <input className="input" value={resetPhrase} onChange={(e) => setResetPhrase(e.target.value)} />
+                </FormField>
+                <button type="button" className="btn btn--danger" onClick={resetStock} disabled={resetBusy}>
+                  {resetBusy ? <span className="spinner" /> : <RotateCcw />} Reset Available Stock
+                </button>
+              </div>
+            )}
           </div>
         </section>
 

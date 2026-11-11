@@ -1,7 +1,8 @@
 const router = require('express').Router();
-const { body } = require('express-validator');
+const { body, param } = require('express-validator');
 const validate = require('../middleware/validate');
 const { adminOnly } = require('../middleware/auth');
+const { formLimiter } = require('../middleware/rateLimiters');
 const upload = require('../middleware/upload');
 const { Order, Gallery, StockLoss, FeedItem, MedicineItem, MedicineTransaction } = require('../models');
 const losses = require('../controllers/stockLossController');
@@ -22,6 +23,7 @@ const contact = require('../controllers/contactController');
 const bulk = require('../controllers/bulkOrderController');
 const certifications = require('../controllers/certificationController');
 const uploads = require('../controllers/uploadController');
+const stockReset = require('../controllers/stockResetController');
 
 router.use(adminOnly);
 
@@ -71,6 +73,10 @@ router.patch(
   ]),
   admin.updateInventory
 );
+router.get('/stock-reset/passkey', stockReset.passkeyStatus);
+router.post('/stock-reset/passkey', formLimiter, validate([body('passkey').isString().isLength({ min: 8, max: 72 })]), stockReset.setPasskey);
+router.post('/stock-reset/categories/:categoryId', formLimiter, validate([param('categoryId').isMongoId(), body('passkey').isString().notEmpty()]), stockReset.resetCategoryStock);
+router.post('/stock-reset', formLimiter, validate([body('passkey').isString().notEmpty()]), stockReset.resetStock);
 
 // Mortality & losses (deaths, broken eggs, spoilage) — each record deducts stock
 router.get('/stock-losses', losses.listLosses);

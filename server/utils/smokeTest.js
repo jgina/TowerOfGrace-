@@ -1045,6 +1045,68 @@ function scratchUri(uri) {
     assert.equal(del.status, 200);
   });
 
+  await check('stock reset requires pass key and preserves pending-order reservations', async () => {
+    const status = await call('GET', '/admin/stock-reset/passkey', null, adminToken);
+    assert.equal(status.status, 200);
+    assert.equal(status.body.configured, false);
+
+    const setKey = await call('POST', '/admin/stock-reset/passkey', { passkey: 'ResetKey123' }, adminToken);
+    assert.equal(setKey.status, 200);
+    const created = await call(
+      'POST',
+      '/admin/products',
+      { name: 'Reset Check Eggs', sku: '', category: categories.find((c) => c.slug === 'eggs')._id, price: '100', stock: '12', variants: [] },
+      adminToken
+    );
+    assert.equal(created.status, 201, JSON.stringify(created.body));
+
+    const reserved = await call(
+      'POST',
+      '/orders',
+      {
+        customer: { fullName: 'Ada Customer', email: 'ada@example.com', phone: '08030000000' },
+        items: [{ productId: created.body.product._id, quantity: 2 }],
+        deliveryMethod: 'FARM_PICKUP',
+        paymentMethod: 'PAY_ON_DELIVERY',
+      },
+      customerToken
+    );
+    assert.equal(reserved.status, 201, JSON.stringify(reserved.body));
+
+    const wrongKey = await call('POST', '/admin/stock-reset', { passkey: 'WrongKey123' }, adminToken);
+    assert.equal(wrongKey.status, 403);
+    const reset = await call('POST', '/admin/stock-reset', { passkey: 'ResetKey123' }, adminToken);
+    assert.equal(reset.status, 200, JSON.stringify(reset.body));
+    assert.ok(reset.body.totals.productUnits >= 10);
+
+    const inventory = await call('GET', '/admin/inventory', null, adminToken);
+    const row = inventory.body.rows.find((item) => item.productId === created.body.product._id);
+    assert.equal(row.stock, 2);
+    assert.equal(row.reservedStock, 2);
+    assert.equal(row.availableStock, 0);
+
+    const broilers = categories.find((category) => category.slug === 'broilers');
+    const otherCategoryProduct = await call(
+      'POST',
+      '/admin/products',
+      { name: 'Unchanged Broiler Stock', sku: '', category: broilers._id, price: '1000', stock: '5', variants: [] },
+      adminToken
+    );
+    assert.equal(otherCategoryProduct.status, 201);
+    const restock = await call('PATCH', `/admin/inventory/${created.body.product._id}`, { stock: 9 }, adminToken);
+    assert.equal(restock.status, 200);
+
+    const eggsCategory = categories.find((category) => category.slug === 'eggs');
+    const categoryReset = await call('POST', `/admin/stock-reset/categories/${eggsCategory._id}`, { passkey: 'ResetKey123' }, adminToken);
+    assert.equal(categoryReset.status, 200, JSON.stringify(categoryReset.body));
+    assert.equal(categoryReset.body.totals.productUnits, 7);
+    const categoryInventory = await call('GET', '/admin/inventory', null, adminToken);
+    const categoryRow = categoryInventory.body.rows.find((item) => item.productId === created.body.product._id);
+    const otherCategoryRow = categoryInventory.body.rows.find((item) => item.productId === otherCategoryProduct.body.product._id);
+    assert.equal(categoryRow.stock, 2, 'pending-order reservation remains in the selected category');
+    assert.equal(otherCategoryRow.stock, 5, 'products in other categories are not changed');
+  });
+
   server.close();
   if (mongo) {
     await mongoose.disconnect();
