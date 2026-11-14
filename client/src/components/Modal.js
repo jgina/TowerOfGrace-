@@ -5,11 +5,13 @@ import './Modal.css';
 
 export default function Modal({ open, onClose, title, subtitle, children, footer, size = 'md' }) {
   const panelRef = useRef(null);
+  const onCloseRef = useRef(onClose);
+  onCloseRef.current = onClose;
 
   useEffect(() => {
     if (!open) return undefined;
     const previous = document.activeElement;
-    const onKey = (e) => e.key === 'Escape' && onClose?.();
+    const onKey = (e) => e.key === 'Escape' && onCloseRef.current?.();
     document.addEventListener('keydown', onKey);
     document.body.style.overflow = 'hidden';
     panelRef.current?.focus();
@@ -18,7 +20,7 @@ export default function Modal({ open, onClose, title, subtitle, children, footer
       document.body.style.overflow = '';
       previous?.focus?.();
     };
-  }, [open, onClose]);
+  }, [open]);
 
   if (!open) return null;
 
