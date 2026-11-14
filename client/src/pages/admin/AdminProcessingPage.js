@@ -148,7 +148,7 @@ export default function AdminProcessingPage() {
         <section className="admin-card proc-meat">
           <div className="admin-card__head">
             <h2>Prepared meat stock</h2>
-            <Link to="/products/prepared-meat" className="link" target="_blank" rel="noreferrer">
+            <Link to="/products/prepared-meat" className="link">
               Shop page
             </Link>
           </div>

@@ -2,7 +2,7 @@ import { Suspense, useEffect, useState } from 'react';
 import { Link, NavLink, Outlet, useLocation } from 'react-router-dom';
 import {
   LayoutDashboard, FileSpreadsheet, Bird, Wheat, Pill, Beef, Package, Tags, Warehouse, Skull, Truck, ShoppingBag, Users, Building2, Mail, FileText, Images, Award, Settings,
-  Menu, X, ExternalLink, LogOut,
+  Menu, X, Globe, LogOut,
 } from 'lucide-react';
 import Logo from '../components/Logo';
 import SEO from '../components/SEO';
@@ -84,8 +84,8 @@ export default function AdminLayout() {
           ))}
         </nav>
         <div className="admin-sidebar__foot">
-          <Link to="/" className="admin-nav__link" target="_blank">
-            <ExternalLink aria-hidden="true" /> View website
+          <Link to="/" className="admin-nav__link">
+            <Globe aria-hidden="true" /> View website
           </Link>
           <button type="button" className="admin-nav__link" onClick={logout}>
             <LogOut aria-hidden="true" /> Sign out

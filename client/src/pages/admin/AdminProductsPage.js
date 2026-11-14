@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
-import { Plus, Search, Pencil, Trash2, Star, ExternalLink, Package } from 'lucide-react';
+import { Plus, Search, Pencil, Trash2, Star, Eye, Package } from 'lucide-react';
 import AdminPageHeader from '../../components/AdminPageHeader';
 import DataTable from '../../components/DataTable';
 import SmartImage from '../../components/SmartImage';
@@ -208,9 +208,9 @@ export default function AdminProductsPage() {
                 align: 'right',
                 render: (p) => (
                   <div className="cell-actions">
-                    <a href={`/product/${p.slug}`} target="_blank" rel="noreferrer" className="icon-btn" aria-label="View on site">
-                      <ExternalLink />
-                    </a>
+                    <Link to={`/product/${p.slug}`} className="icon-btn" aria-label="View on site">
+                      <Eye />
+                    </Link>
                     <button type="button" className="icon-btn" onClick={() => navigate(`/admin/products/${p._id}/edit`)} aria-label="Edit">
                       <Pencil />
                     </button>

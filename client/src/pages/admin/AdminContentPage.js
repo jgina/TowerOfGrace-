@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
-import { Save, ExternalLink, RotateCcw } from 'lucide-react';
+import { Link, useSearchParams } from 'react-router-dom';
+import { Save, Eye, RotateCcw } from 'lucide-react';
 import AdminPageHeader from '../../components/AdminPageHeader';
 import ContentFieldEditor from '../../components/ContentFieldEditor';
 import { PageLoader, ErrorState } from '../../components/Loader';
@@ -105,9 +105,9 @@ export default function AdminContentPage() {
               </small>
             </div>
             <div className="row row--wrap">
-              <a href={PREVIEW_LINKS[section.key]} target="_blank" rel="noreferrer" className="btn btn--ghost btn--sm">
-                <ExternalLink /> View page
-              </a>
+              <Link to={PREVIEW_LINKS[section.key]} className="btn btn--ghost btn--sm">
+                <Eye /> View page
+              </Link>
               <button type="button" className="btn btn--ghost btn--sm" onClick={resetToDefaults} disabled={state.loading}>
                 <RotateCcw /> Defaults
               </button>

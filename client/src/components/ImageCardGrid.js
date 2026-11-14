@@ -21,7 +21,18 @@ export default function ImageCardGrid({ items = [], slotPrefix, bundled, columns
         const slot = slotPrefix ? `${slotPrefix}-${index + 1}` : undefined;
         const image = slotImage(item.image, slot, bundled ? bundled[index] : cardImage(slotPrefix, index));
         const points = toPoints(item.points);
-        const internal = item.link?.startsWith('/');
+        let internalPath = null;
+        if (item.link) {
+          try {
+            const url = new URL(item.link, window.location.origin);
+            const siteHost = url.hostname === window.location.hostname || url.hostname === 'towerofgracefarms.com' || url.hostname === 'www.towerofgracefarms.com';
+            if (siteHost && (url.protocol === 'http:' || url.protocol === 'https:')) {
+              internalPath = `${url.pathname}${url.search}${url.hash}`;
+            }
+          } catch {
+            internalPath = null;
+          }
+        }
         return (
           <article key={`${item.title}-${index}`} className="image-card">
             <div className="image-card__media">
@@ -43,8 +54,8 @@ export default function ImageCardGrid({ items = [], slotPrefix, bundled, columns
                 </ul>
               )}
               {item.link &&
-                (internal ? (
-                  <Link to={item.link} className="image-card__link">
+                (internalPath ? (
+                  <Link to={internalPath} className="image-card__link">
                     {item.linkLabel || 'Learn more'} <ArrowRight />
                   </Link>
                 ) : (
